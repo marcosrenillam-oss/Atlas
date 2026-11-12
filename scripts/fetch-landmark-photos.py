@@ -64,7 +64,7 @@ for lid, (title, forced) in LANDMARKS.items():
                 src = (j.get('originalimage') or {}).get('source', '')
                 parts = src.split('?')[0].split('/')
                 cand = urllib.parse.unquote(parts[-2] if '/thumb/' in src else parts[-1]) if src else ''
-                if cand and not re.search(r'logo|map|mapa|locator|\.svg|\.png$', cand, re.I):
+                if cand and not re.search(r'logo|map|mapa|locator|satellite|sentinel|landsat|nasa|iss0|\.svg|\.png$', cand, re.I):
                     fname = cand
                     break
         if not fname:
@@ -73,7 +73,7 @@ for lid, (title, forced) in LANDMARKS.items():
                                         'srsearch': f'{title.replace("_", " ")} filetype:bitmap', 'format': 'json'})
             for hit in json.loads(get(f'https://commons.wikimedia.org/w/api.php?{q}'))['query']['search']:
                 cand = hit['title'].removeprefix('File:')
-                if re.search(r'\.jpe?g$', cand, re.I) and not re.search(r'logo|map|mapa|locator|flag|stamp|coat', cand, re.I):
+                if re.search(r'\.jpe?g$', cand, re.I) and not re.search(r'logo|map|mapa|locator|flag|stamp|coat|satellite|sentinel|landsat|nasa|iss0', cand, re.I):
                     fname = cand
                     break
         if not fname:
