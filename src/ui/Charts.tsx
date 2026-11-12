@@ -1,8 +1,8 @@
 import { formatMoney, type Minor } from '../lib/money';
 
 /** Paleta sobria basada en azul oscuro y azul grisáceo, distinguible en claro y oscuro. */
-export const SERIES = ['#1f3a5f', '#5b7089', '#8fa3b8', '#a68a64', '#6f8f7d', '#b9b2a6', '#7b6d8d', '#c4a882'];
-export const SERIES_DARK = ['#9dbbdd', '#7d8fa5', '#5d7088', '#c6a77c', '#8fb7a0', '#8a857c', '#a597b8', '#d9c09a'];
+export const SERIES = ['#1e7bd8', '#22c1c3', '#ff8a6b', '#e2b25c', '#3a4bd8', '#6fbf9a', '#93a6b4', '#e07a96'];
+export const SERIES_DARK = ['#60a5fa', '#5eead4', '#ffa58c', '#f2cd7d', '#8fa2ff', '#86d9b2', '#a7b8c4', '#f29bb2'];
 export const seriesColor = (i: number) => (document.documentElement.dataset.theme === 'dark' ? SERIES_DARK : SERIES)[i % SERIES.length];
 
 export interface Slice {

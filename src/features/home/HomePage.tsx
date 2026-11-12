@@ -232,7 +232,7 @@ function FeaturedTrip({ trip, now }: { trip: TripWithStatus; now: Date }) {
 }
 
 function StatusDot({ status }: { status: TripWithStatus['status'] }) {
-  const c = status === 'en-curso' ? '#12a271' : status === 'proximo' ? '#6a4cff' : '#ff9f1c';
+  const c = status === 'en-curso' ? '#0f9f8a' : status === 'proximo' ? '#1e7bd8' : '#f08a4b';
   return <span style={{ width: 8, height: 8, borderRadius: 4, background: c, boxShadow: `0 0 0 3px ${c}33` }} />;
 }
 

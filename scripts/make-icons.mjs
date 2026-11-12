@@ -23,7 +23,7 @@ async function shot(file, w, h, html) {
   await page.screenshot({ path: join(out, file), type: jpeg ? 'jpeg' : 'png', ...(jpeg ? { quality: 82 } : {}) });
 }
 const icon = (size, pad = 0) =>
-  `<div style="width:${size}px;height:${size}px;background:linear-gradient(135deg,#FF8A3D,#FF4F8B 50%,#6A4CFF);display:grid;place-items:center">
+  `<div style="width:${size}px;height:${size}px;background:linear-gradient(135deg,#22C1C3,#1E7BD8 55%,#3A4BD8);display:grid;place-items:center">
      <div style="width:${size - pad * 2}px;height:${size - pad * 2}px">${svg.replace('<svg', '<svg width="100%" height="100%"')}</div></div>`;
 
 await shot('icon-192.png', 192, 192, icon(192));
@@ -37,7 +37,7 @@ const splashes = [
   [1242, 2688], [1284, 2778], [1290, 2796], [1206, 2622], [1320, 2868], [1080, 2340],
 ];
 for (const [w, h] of splashes) {
-  for (const [mode, bg, fg] of [['light', 'radial-gradient(circle at 15% 10%,#ffc9a8,transparent 55%),radial-gradient(circle at 90% 25%,#d6c9ff,transparent 55%),#FBF5EF', '#1B1530'], ['dark', 'radial-gradient(circle at 15% 10%,#3b1f8f,transparent 55%),radial-gradient(circle at 90% 30%,#6b1250,transparent 55%),#0C0920', '#F5F2FF']]) {
+  for (const [mode, bg, fg] of [['light', 'radial-gradient(circle at 15% 10%,#bdeee9,transparent 55%),radial-gradient(circle at 90% 25%,#c9defa,transparent 55%),#F7F3EC', '#0D2233'], ['dark', 'radial-gradient(circle at 15% 10%,#0e4a63,transparent 55%),radial-gradient(circle at 90% 30%,#1e3fa8,transparent 55%),#07131F', '#EEF6FA']]) {
     const s = Math.round(w * 0.22);
     await shot(`splash-${w}x${h}-${mode}.jpg`, w, h,
       `<div style="width:${w}px;height:${h}px;background:${bg};display:flex;flex-direction:column;align-items:center;justify-content:center;gap:${Math.round(s * 0.28)}px;font-family:-apple-system,system-ui,sans-serif">

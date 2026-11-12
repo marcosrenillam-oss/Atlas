@@ -43,9 +43,9 @@ export function Ring({ value, size = 56, stroke = 6, children, label }: { value:
       <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
         <defs>
           <linearGradient id={id.current} x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0" stopColor="#ff8a3d" />
-            <stop offset=".5" stopColor="#ff4f8b" />
-            <stop offset="1" stopColor="#7b5cff" />
+            <stop offset="0" stopColor="#22c1c3" />
+            <stop offset=".55" stopColor="#1e7bd8" />
+            <stop offset="1" stopColor="#3a4bd8" />
           </linearGradient>
         </defs>
         <circle className="track" cx={size / 2} cy={size / 2} r={r} fill="none" strokeWidth={stroke} />
@@ -57,7 +57,7 @@ export function Ring({ value, size = 56, stroke = 6, children, label }: { value:
   );
 }
 
-const COLORS = ['#ffb347', '#ff4f8b', '#7b5cff', '#3ad1a0', '#4fb3ff', '#ffd166'];
+const COLORS = ['#22c1c3', '#1e7bd8', '#ff8a6b', '#f2c46d', '#5eead4', '#3a4bd8'];
 const STAR = '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M12 0c.7 6.6 4.9 10.8 12 12-7.1 1.2-11.3 5.4-12 12-.7-6.6-4.9-10.8-12-12C7.1 10.8 11.3 6.6 12 0z"/></svg>';
 
 /** Pequeña explosión de destellos en un punto de la pantalla (recompensa al completar). */

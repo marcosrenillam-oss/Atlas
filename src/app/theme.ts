@@ -6,7 +6,7 @@ export function applyTheme(pref: ThemePref) {
   const dark = pref === 'dark' || (pref === 'system' && mq().matches);
   const root = document.documentElement;
   root.dataset.theme = dark ? 'dark' : 'light';
-  const color = dark ? '#0C0920' : '#FBF5EF';
+  const color = dark ? '#07131F' : '#F7F3EC';
   document.querySelectorAll('meta[name="theme-color"]').forEach((m) => m.setAttribute('content', color));
 }
 

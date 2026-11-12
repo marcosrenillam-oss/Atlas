@@ -21,14 +21,14 @@ export function Cover({ trip, className, style, showCredit }: { trip: Pick<Trip,
 
 /** Paletas vivas (base + tres manchas de color) inspiradas en atardeceres y cielos. */
 const PALETTES: [string, string, string, string][] = [
-  ['#ff7a59', '#ffb347', '#ff4f8b', '#ffd166'], // atardecer
-  ['#6a4cff', '#ff6bd6', '#4fb3ff', '#b49bff'], // crepúsculo
-  ['#1fa2ff', '#12d8fa', '#3a5bff', '#a6ffcb'], // océano
-  ['#12a271', '#5be3b0', '#1fa2ff', '#d4fc79'], // bosque
-  ['#ff4f8b', '#ff9a8b', '#a18cd1', '#fbc2eb'], // flor
-  ['#f7971e', '#ffd200', '#ff6b4a', '#ffe29f'], // desierto
-  ['#4834d4', '#686de0', '#e056fd', '#30cfd0'], // aurora
-];
+  ['#14b8c4', '#5eead4', '#1e7bd8', '#a5f3fc'], // laguna
+  ['#1e40af', '#22c1c3', '#3b82f6', '#93c5fd'], // mar abierto
+  ['#ff8a6b', '#ffc27a', '#f2789a', '#fde3a7'], // atardecer en la costa
+  ['#2a9d8f', '#9bd3ae', '#e9c46a', '#5eead4'], // olivo y salvia
+  ['#6d7fe0', '#b4bdff', '#5eead4', '#dfe6ff'], // lavanda
+  ['#d9975a', '#f6d5a7', '#ff8a6b', '#fff1d6'], // arena
+  ['#2563eb', '#bae6fd', '#38bdf8', '#7dd3fc'], // Santorini
+]
 
 export function hashString(s: string): number {
   let h = 2166136261;
