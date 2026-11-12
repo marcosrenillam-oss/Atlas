@@ -35,6 +35,8 @@ export interface Cover {
 
 export interface Trip extends Base {
   name: string;
+  /** Ciudad de salida (se muestra en el billete de la portada). */
+  origin?: string;
   stages: Stage[];
   startDate?: ISODate;
   endDate?: ISODate;

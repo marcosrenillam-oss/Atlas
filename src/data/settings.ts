@@ -5,6 +5,8 @@ export type ThemePref = 'system' | 'light' | 'dark';
 
 export interface Profile {
   name: string;
+  /** Ciudad desde la que sueles salir; rellena «Salgo desde» en los viajes nuevos. */
+  homeCity?: string;
   currency: string;
   language: 'es';
   theme: ThemePref;

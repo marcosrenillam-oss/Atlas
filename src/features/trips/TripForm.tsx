@@ -18,6 +18,7 @@ import { requestPersistence, useOnline } from '../../app/hooks';
 
 interface Draft {
   name: string;
+  origin: string;
   stages: Stage[];
   startDate: string;
   endDate: string;
@@ -32,9 +33,10 @@ interface Draft {
   cover?: Trip['cover'];
 }
 
-function fromTrip(t: Trip | undefined, currency: string): Draft {
+function fromTrip(t: Trip | undefined, currency: string, homeCity = ''): Draft {
   return {
     name: t?.name ?? '',
+    origin: t ? t.origin ?? '' : homeCity,
     stages: t?.stages.length ? t.stages.map((s) => ({ ...s })) : [{ id: uid(), name: '' }],
     startDate: t?.startDate ?? '',
     endDate: t?.endDate ?? '',
@@ -54,7 +56,7 @@ export function TripForm({ open, onClose, trip, onSaved }: { open: boolean; onCl
   const profile = useProfile();
   const ui = useUI();
   const online = useOnline();
-  const [d, setD] = useState<Draft>(() => fromTrip(trip, profile.currency));
+  const [d, setD] = useState<Draft>(() => fromTrip(trip, profile.currency, profile.homeCity ?? ''));
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [companion, setCompanion] = useState('');
   const [busy, setBusy] = useState<string | null>(null);
@@ -96,6 +98,7 @@ export function TripForm({ open, onClose, trip, onSaved }: { open: boolean; onCl
       const companions = [...d.companions, companion.trim()].filter(Boolean);
       const data = {
         name: d.name.trim(),
+        origin: d.origin.trim() || undefined,
         stages,
         startDate: d.startDate || undefined,
         endDate: d.endDate || undefined,
@@ -175,6 +178,10 @@ export function TripForm({ open, onClose, trip, onSaved }: { open: boolean; onCl
       <form id="trip-form" className="form" onSubmit={submit} noValidate>
         <Field label="Nombre del viaje" htmlFor="t-name" error={errors.name}>
           <input id="t-name" className="input" value={d.name} onChange={(e) => set('name', e.target.value)} placeholder="Escapada a Lisboa" aria-invalid={!!errors.name || undefined} autoComplete="off" enterKeyHint="next" />
+        </Field>
+
+        <Field label="Salgo desde" htmlFor="t-origin" hint="Aparece en el billete de la portada.">
+          <input id="t-origin" className="input" value={d.origin} onChange={(e) => set('origin', e.target.value)} placeholder="Madrid" autoComplete="address-level2" enterKeyHint="next" />
         </Field>
 
         <div className="field">
@@ -310,7 +317,10 @@ export function TripForm({ open, onClose, trip, onSaved }: { open: boolean; onCl
               {busy === 'photo' ? <Loader2 className="spin" /> : <Search />} Buscar en Wikipedia
             </button>
           </div>
-          <span className="hint">La foto se guarda en el dispositivo y se ve sin conexión.{!online && ' La búsqueda en Wikipedia necesita conexión.'}</span>
+          {!d.cover && (
+            <Cover trip={{ name: d.name, stages: d.stages, origin: d.origin, startDate: d.startDate || undefined, travelers: d.travelers }} style={{ aspectRatio: '16/9', borderRadius: 18 }} />
+          )}
+          <span className="hint">{d.cover ? '' : 'Sin foto, la portada es este billete con tu origen y destino. '}La foto se guarda en el dispositivo y se ve sin conexión.{!online && ' La búsqueda en Wikipedia necesita conexión.'}</span>
           <input ref={fileInput} type="file" accept="image/*" hidden onChange={(e) => {
             const f = e.target.files?.[0];
             if (f) void setCoverBlob(f, f.name);

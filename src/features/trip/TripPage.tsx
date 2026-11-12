@@ -70,7 +70,7 @@ export function TripPage() {
       } />
       <main className="page" style={{ paddingTop: 4 }}>
         <div className="stack" style={{ gap: 14 }}>
-          <Cover trip={trip} showCredit className="rise" style={{ aspectRatio: trip.cover ? '16/8' : '16/6.5', borderRadius: 26, boxShadow: 'var(--shadow-2)' }} />
+          <Cover trip={trip} showCredit className="rise" style={{ aspectRatio: trip.cover ? '16/8' : '16/8.5', borderRadius: 26, boxShadow: 'var(--shadow-2)' }} />
           <div>
             <div className="row-between" style={{ alignItems: 'flex-start' }}>
               <h1 style={{ fontSize: 30, fontWeight: 800, lineHeight: 1.08, letterSpacing: '-0.035em' }}>{trip.name}</h1>

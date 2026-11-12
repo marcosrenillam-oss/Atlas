@@ -13,21 +13,28 @@ export function Sheet(props: {
 }) {
   const { open, onClose } = props;
   const ref = useRef<HTMLDivElement>(null);
+  // onClose cambia en cada render del padre (función en línea). Si fuera dependencia del efecto,
+  // cada pulsación de tecla reabriría la hoja, movería el foco y cerraría el teclado del iPhone.
+  const closeRef = useRef(onClose);
+  closeRef.current = onClose;
   useEffect(() => {
     if (!open) return;
     const prev = document.activeElement as HTMLElement | null;
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && closeRef.current();
     document.addEventListener('keydown', onKey);
     const html = document.documentElement;
     const prevOverflow = html.style.overflow;
     html.style.overflow = 'hidden';
-    requestAnimationFrame(() => ref.current?.focus());
+    // Solo al abrir: no robar el foco si ya hay un campo activo dentro de la hoja.
+    requestAnimationFrame(() => {
+      if (!ref.current?.contains(document.activeElement)) ref.current?.focus({ preventScroll: true });
+    });
     return () => {
       document.removeEventListener('keydown', onKey);
       html.style.overflow = prevOverflow;
-      prev?.focus?.();
+      prev?.focus?.({ preventScroll: true });
     };
-  }, [open, onClose]);
+  }, [open]);
   if (!open) return null;
   return createPortal(
     <>

@@ -202,16 +202,14 @@ function FeaturedTrip({ trip, now }: { trip: TripWithStatus; now: Date }) {
     ringSub = total ? `${prep!.done} de ${total} listo` : 'añade tareas o equipaje';
   }
   return (
-    <Link to={`/viajes/${trip.id}`} className="hero-trip" aria-label={`Próximo viaje: ${trip.name}`}>
+    <Link to={`/viajes/${trip.id}`} className={`hero-trip${trip.cover ? '' : ' no-photo'}`} aria-label={`Próximo viaje: ${trip.name}`}>
       <div style={{ position: 'relative' }}>
         <Cover trip={trip} />
         <span className="float-chip a"><StatusDot status={trip.status} /> {ongoing ? 'En curso' : trip.status === 'proximo' ? 'Próximo' : 'En preparación'}</span>
-        <span className="float-chip b"><Users /> <span className="big">{trip.travelers}</span> {trip.travelers === 1 ? 'viajero' : 'viajeros'}</span>
-        <div className="overlay">
-          <h2>{trip.name}</h2>
-          <div className="sub">{destinationsLabel(trip)} · {formatRange(trip.startDate, trip.endDate)}{len ? ` · ${len} días` : ''}</div>
-        </div>
+        {trip.cover && <span className="float-chip b"><Users /> <span className="big">{trip.travelers}</span> {trip.travelers === 1 ? 'viajero' : 'viajeros'}</span>}
+        {trip.cover && <HeroTitle trip={trip} len={len} />}
       </div>
+      {!trip.cover && <HeroTitle trip={trip} len={len} />}
       <div className="countdown">
         <div>
           <div className="big">{big}</div>
@@ -228,6 +226,15 @@ function FeaturedTrip({ trip, now }: { trip: TripWithStatus; now: Date }) {
         </div>
       </div>
     </Link>
+  );
+}
+
+function HeroTitle({ trip, len }: { trip: TripWithStatus; len: number | null }) {
+  return (
+    <div className="overlay">
+      <h2>{trip.name}</h2>
+      <div className="sub">{destinationsLabel(trip)} · {formatRange(trip.startDate, trip.endDate)}{len ? ` · ${len} días` : ''}</div>
+    </div>
   );
 }
 

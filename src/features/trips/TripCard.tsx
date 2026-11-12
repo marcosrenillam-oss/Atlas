@@ -57,7 +57,7 @@ export function TripCard({ trip, onMore }: { trip: TripWithStatus; onMore?: () =
 export function TripRow({ trip }: { trip: TripWithStatus }) {
   return (
     <Link to={`/viajes/${trip.id}`} className="trip-row list-row">
-      <Cover trip={trip} />
+      <Cover trip={trip} mini />
       <div className="grow">
         <div className="ellipsis" style={{ fontWeight: 600 }}>{trip.name}</div>
         <div className="meta ellipsis">{formatRange(trip.startDate, trip.endDate)} · {destinationsLabel(trip)}</div>

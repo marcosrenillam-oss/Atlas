@@ -64,10 +64,18 @@ const tab = (page, name) => page.locator('nav.tabs').getByRole('link', { name, e
 const shot = async (page, name) => { await page.waitForTimeout(400); return page.screenshot({ path: join(out, `${name}.png`), fullPage: false }); };
 const sheetSave = (page) => page.locator('.sheet-head').getByRole('button', { name: /^(Guardar|Crear)$/ }).click();
 
-async function createTrip(page, { name, stages, start, end, companions = [], budget, confirmed = true }) {
+async function createTrip(page, { name, stages, start, end, companions = [], budget, confirmed = true, origin }) {
   await page.goto(`${BASE}/viajes`);
   await page.getByRole('button', { name: 'Crear viaje' }).first().click();
-  await page.locator('#t-name').fill(name);
+  // Escribe letra a letra (como en el iPhone) y comprueba que el teclado no se cierra.
+  await page.locator('#t-name').pressSequentially(name, { delay: 15 });
+  assert.equal(await page.evaluate(() => document.activeElement?.id), 't-name', 'el campo perdió el foco al escribir');
+  assert.equal(await page.locator('#t-name').inputValue(), name);
+  if (origin) {
+    await page.locator('#t-origin').fill('');
+    await page.locator('#t-origin').pressSequentially(origin, { delay: 15 });
+    assert.equal(await page.evaluate(() => document.activeElement?.id), 't-origin', 'el campo origen perdió el foco');
+  }
   for (let i = 0; i < stages.length; i++) {
     if (i > 0) await page.getByRole('button', { name: 'Añadir destino' }).click();
     await page.getByLabel(`Destino ${i + 1}`).fill(stages[i]);
@@ -119,11 +127,13 @@ async function createTrip(page, { name, stages, start, end, companions = [], bud
   });
 
   await step('Crear viaje con varios destinos, acompañantes y presupuesto', async () => {
-    tripId = await createTrip(page, { name: 'Escapada a Lisboa', stages: ['Lisboa', 'Sintra'], start: '2026-12-04', end: '2026-12-08', companions: ['Laura'], budget: '1.500' });
+    tripId = await createTrip(page, { name: 'Escapada a Lisboa', origin: 'Madrid', stages: ['Lisboa', 'Sintra'], start: '2026-12-04', end: '2026-12-08', companions: ['Laura'], budget: '1.500' });
     await page.getByRole('heading', { name: 'Escapada a Lisboa' }).waitFor();
     await page.getByText('Lisboa · Sintra').first().waitFor();
     await page.getByText('5 días').first().waitFor();
     await page.getByText(/2 en total · Marcos, Laura/).waitFor();
+    assert.ok(await page.locator('.ticket-art text', { hasText: 'Madrid' }).count() > 0, 'el billete no muestra el origen');
+    assert.ok(await page.locator('.ticket-art text', { hasText: 'Lisboa +1' }).count() > 0, 'el billete no muestra el destino');
     await shot(page, '02-viaje-resumen');
   });
 
@@ -148,7 +158,8 @@ async function createTrip(page, { name, stages, start, end, companions = [], bud
     const add = async (type, title, time, extra) => {
       await page.getByRole('button', { name: 'Añadir', exact: true }).first().click();
       await page.getByRole('button', { name: type, exact: true }).click();
-      await page.locator('#i-title').fill(title);
+      await page.locator('#i-title').pressSequentially(title, { delay: 10 });
+      assert.equal(await page.evaluate(() => document.activeElement?.id), 'i-title', 'el título perdió el foco');
       if (time) await page.locator('#i-time').fill(time);
       if (extra) await extra();
       await sheetSave(page);

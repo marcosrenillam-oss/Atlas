@@ -23,6 +23,10 @@ export function ProfilePage() {
   const profile = useProfile();
   const ui = useUI();
   const [name, setName] = useState(profile.name);
+  const [city, setCity] = useState(profile.homeCity ?? '');
+  useEffect(() => {
+    setCity(profile.homeCity ?? '');
+  }, [profile.homeCity]);
   useEffect(() => {
     setName(profile.name);
   }, [profile.name]);
@@ -90,11 +94,14 @@ export function ProfilePage() {
     <main className="page stagger">
       <div className="page-head"><h1>Tu <span className="serif grad-text">perfil</span></h1></div>
       <div className="stack-lg">
-        <div className="card row" style={{ gap: 14 }}>
+        <div className="card row" style={{ gap: 14, alignItems: 'flex-start' }}>
           <span className="avatar">{initials(name || 'Tú')}</span>
           <div className="grow">
             <label className="label" htmlFor="pf-name">Tu nombre</label>
             <input id="pf-name" className="input" style={{ marginTop: 4 }} value={name} placeholder="Cómo quieres que te salude ATLAS" onChange={(e) => setName(e.target.value)} onBlur={() => void saveProfile({ name: name.trim() })} />
+            <label className="label" htmlFor="pf-city" style={{ display: 'block', marginTop: 12 }}>Tu ciudad de origen</label>
+            <input id="pf-city" className="input" style={{ marginTop: 4 }} value={city} placeholder="Madrid" onChange={(e) => setCity(e.target.value)} onBlur={() => void saveProfile({ homeCity: city.trim() })} />
+            <span className="hint tiny faint">Se rellena sola en «Salgo desde» al crear un viaje.</span>
           </div>
         </div>
 
