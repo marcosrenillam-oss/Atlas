@@ -13,6 +13,7 @@ import { TripPage } from '../features/trip/TripPage';
 import { ExplorePage } from '../features/explore/ExplorePage';
 import { ExpensesPage } from '../features/expenses/ExpensesPage';
 import { ProfilePage } from '../features/profile/ProfilePage';
+import { PassportPage } from '../features/passport/PassportPage';
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -105,6 +106,7 @@ export function App() {
             <Route path="/explorar" element={<ExplorePage />} />
             <Route path="/gastos" element={<ExpensesPage />} />
             <Route path="/perfil" element={<ProfilePage />} />
+            <Route path="/pasaporte" element={<PassportPage />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </div>

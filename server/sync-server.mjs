@@ -47,7 +47,7 @@ function send(res, status, body) {
   res.end(body === undefined ? '' : JSON.stringify(body));
 }
 
-const ENTITIES = new Set(['trips', 'participants', 'items', 'places', 'categories', 'expenses', 'settlements', 'docs', 'files', 'packingLists', 'packingItems', 'tasks']);
+const ENTITIES = new Set(['trips', 'participants', 'items', 'places', 'categories', 'expenses', 'settlements', 'docs', 'files', 'packingLists', 'packingItems', 'tasks', 'journal']);
 
 createServer((req, res) => {
   if (req.method === 'OPTIONS') return send(res, 204);

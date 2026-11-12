@@ -88,7 +88,7 @@ async function tripOf(entity: EntityName, rec: { tripId?: string | null; listId?
 
 // ───────────────────────── Operaciones de dominio ─────────────────────────
 
-const TRIP_CHILDREN: EntityName[] = ['participants', 'items', 'places', 'expenses', 'settlements', 'docs', 'tasks', 'files', 'categories'];
+const TRIP_CHILDREN: EntityName[] = ['participants', 'items', 'places', 'expenses', 'settlements', 'docs', 'tasks', 'journal', 'files', 'categories'];
 
 export async function deleteTrip(tripId: string): Promise<void> {
   const lists = await db.packingLists.where('tripId').equals(tripId).toArray();

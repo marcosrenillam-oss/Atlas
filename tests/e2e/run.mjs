@@ -54,7 +54,7 @@ async function newDevice(browser, name, extra = {}) {
   const ctx = await browser.newContext({ ...iphone, locale: 'es-ES', timezoneId: 'Europe/Madrid', acceptDownloads: true, ...extra });
   const page = await ctx.newPage();
   page.on('console', (m) => {
-    if (m.type() === 'error' && !/tile\.openstreetmap|ERR_INTERNET_DISCONNECTED|Failed to load resource|net::ERR/.test(m.text())) consoleErrors.push(`[${name}] ${m.text()}`);
+    if (m.type() === 'error' && !/tile\.openstreetmap|ERR_INTERNET_DISCONNECTED|Failed to load resource|net::ERR|blocked by CORS policy/.test(m.text())) consoleErrors.push(`[${name}] ${m.text()}`);
   });
   page.on('pageerror', (e) => consoleErrors.push(`[${name}] pageerror ${e.message}`));
   return { ctx, page };
@@ -510,6 +510,81 @@ async function createTrip(page, { name, stages, start, end, companions = [], bud
     await E.page.getByRole('alertdialog').getByRole('button', { name: 'Borrar todo' }).click();
     await E.page.getByText('Tu centro de control de viajes').waitFor();
     await E.ctx.close();
+  });
+
+  await step('Durante el viaje: Inicio es el itinerario del día, gasto rápido, cartera, diario, resumen y pasaporte', async () => {
+    const F = await newDevice(browser, 'viaje');
+    const pg = F.page;
+    globalThis.__page = () => pg;
+    const iso = (d) => { const x = new Date(); x.setDate(x.getDate() + d); return x.toLocaleDateString('sv-SE'); };
+    await pg.goto(`${BASE}/perfil`);
+    await pg.locator('#pf-city').fill('Madrid');
+    await pg.locator('#pf-city').blur();
+    await pg.waitForTimeout(200);
+    const id = await createTrip(pg, { name: 'Viaje en curso', stages: ['Oporto'], start: iso(-1), end: iso(2), companions: ['Laura'] });
+    // El origen del perfil aparece en el billete
+    await pg.locator('.ticket-art text', { hasText: 'Madrid' }).first().waitFor({ timeout: 10000 }); // ciudad del perfil en el billete
+    await pg.goto(BASE);
+    await pg.getByText('De viaje · Día 2 de 4').waitFor();
+    await pg.getByRole('heading', { name: 'Hoy' }).waitFor();
+    // Añadir un plan desde Inicio
+    await pg.getByRole('button', { name: 'Añadir al itinerario' }).click();
+    await pg.locator('#i-title').pressSequentially('Bodegas de Gaia', { delay: 10 });
+    await pg.locator('#i-time').fill('17:00');
+    await sheetSave(pg);
+    await pg.getByRole('button', { name: 'Editar Bodegas de Gaia' }).waitFor();
+    // Diario
+    await pg.getByRole('button', { name: 'Escribir en el diario de este día' }).click();
+    await pg.getByLabel('Texto del diario').pressSequentially('Atardecer en la Ribeira.', { delay: 5 });
+    assert.equal(await pg.evaluate(() => document.activeElement?.getAttribute('aria-label')), 'Texto del diario', 'el diario perdió el foco');
+    await sheetSave(pg);
+    await pg.getByText('Atardecer en la Ribeira.').waitFor();
+    await shot(pg, '18-inicio-viaje');
+    // Gasto rápido
+    await pg.getByRole('button', { name: 'Gasto rápido' }).click();
+    for (const k of ['1', '2', 'Coma decimal', '5']) await pg.getByRole('button', { name: k, exact: true }).click();
+    await pg.getByRole('button', { name: 'Comida' }).click();
+    await shot(pg, '19-gasto-rapido');
+    await pg.getByRole('button', { name: /^Apuntar 12,50/ }).click();
+    await pg.getByText('Gasto de 12,50 € apuntado').waitFor();
+    await pg.goto(`${BASE}/viajes/${id}/gastos`);
+    await pg.getByText('12,50 €').first().waitFor();
+    await pg.getByRole('button', { name: 'Saldos' }).click();
+    await pg.getByText('+6,25 €').waitFor();
+    // Gasto en otra moneda con tipo automático (o el guardado / aviso si no hay red)
+    await pg.getByRole('button', { name: 'Gastos', exact: true }).click();
+    await pg.getByRole('button', { name: 'Gasto', exact: true }).click();
+    await pg.locator('#e-title').fill('Taxi en dólares');
+    await pg.getByRole('switch', { name: 'Pagado en otra moneda' }).evaluate((el) => el.click());
+    await pg.getByText(/Tipo de referencia|Último tipo guardado|Sin conexión ni tipo guardado/).waitFor({ timeout: 15000 });
+    await pg.locator('.sheet-head').getByRole('button', { name: 'Cancelar' }).click();
+    // Cartera: un billete importado entra solo
+    await pg.goto(`${BASE}/viajes/${id}/documentos`);
+    const pdf = Buffer.from('%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj 2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj 3 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 200 200]>>endobj\ntrailer<</Root 1 0 R>>\n%%EOF');
+    await pg.locator('input[type=file]').setInputFiles([{ name: 'billete-tren.pdf', mimeType: 'application/pdf', buffer: pdf }]);
+    await sheetSave(pg);
+    await pg.goto(BASE);
+    await pg.getByRole('button', { name: /Cartera/ }).click();
+    await pg.getByRole('button', { name: 'Abrir billete-tren' }).waitFor();
+    await shot(pg, '20-cartera');
+    await pg.locator('.sheet-head').getByRole('button', { name: 'Cerrar' }).click();
+    // Resumen del viaje
+    await pg.goto(`${BASE}/viajes/${id}`);
+    await pg.getByRole('button', { name: /^Resumen$/ }).click();
+    await pg.getByText('Gasto total').waitFor();
+    await pg.getByText('Atardecer en la Ribeira.').first().waitFor();
+    await shot(pg, '21-resumen-viaje');
+    await pg.locator('.sheet-head').getByRole('button', { name: 'Cerrar' }).click();
+    // Mapa vectorial o plano local
+    await pg.goto(`${BASE}/viajes/${id}/mapa`);
+    await pg.locator('.maplibregl-canvas, svg.plot, .map-loading').first().waitFor({ timeout: 20000 });
+    // Pasaporte
+    await pg.goto(`${BASE}/pasaporte`);
+    await pg.getByText('Primer despegue').waitFor();
+    await pg.getByText(/1 de 12|2 de 12|3 de 12/).waitFor();
+    await shot(pg, '22-pasaporte');
+    await F.ctx.close();
+    globalThis.__page = () => A.page;
   });
 
   await step('Sin errores de consola', async () => {

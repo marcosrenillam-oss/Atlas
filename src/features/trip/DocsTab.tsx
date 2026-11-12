@@ -8,7 +8,7 @@ import { deleteDoc, save, storeFile, update } from '../../data/repo';
 import { db } from '../../data/db';
 import { formatBytes, useFileUrl } from '../../files/files';
 import { Empty } from '../../ui/Empty';
-import { Field } from '../../ui/Controls';
+import { Field, Switch } from '../../ui/Controls';
 import { Sheet } from '../../ui/Sheet';
 import { useUI } from '../../ui/UIProvider';
 import { fmt, toISODate } from '../../lib/dates';
@@ -54,6 +54,7 @@ export function DocsTab({ trip }: { trip: TripWithStatus }) {
         const stored = await storeFile(f, f.name, trip.id);
         last = await save<TravelDoc>('docs', {
           tripId: trip.id, name: f.name.replace(/\.[^.]+$/, ''), kind: guessKind(f), fileId: stored.id, mime: stored.mime, size: f.size,
+          wallet: ['billete', 'entrada'].includes(guessKind(f)),
         });
         n++;
       }
@@ -111,7 +112,7 @@ function DocCard({ doc, onOpen }: { doc: TravelDoc; onOpen: () => void }) {
       <div className="doc-thumb">{url ? <img src={url} alt="" loading="lazy" /> : doc.mime === 'application/pdf' ? <FileText /> : <File />}</div>
       <div className="body">
         <div className="name ellipsis">{doc.name}</div>
-        <div className="tiny faint">{docKindLabel(doc.kind)} · {formatBytes(doc.size)}</div>
+        <div className="tiny faint">{doc.wallet ? '★ Cartera · ' : ''}{docKindLabel(doc.kind)} · {formatBytes(doc.size)}</div>
       </div>
     </button>
   );
@@ -121,9 +122,10 @@ function DocEdit({ doc, onClose }: { doc: TravelDoc; onClose: () => void }) {
   const [name, setName] = useState(doc.name);
   const [kind, setKind] = useState(doc.kind);
   const [description, setDescription] = useState(doc.description ?? '');
+  const [wallet, setWallet] = useState(!!doc.wallet);
   async function submit(e?: React.FormEvent) {
     e?.preventDefault();
-    await update<TravelDoc>('docs', doc.id, { name: name.trim() || doc.name, kind, description: description.trim() || undefined });
+    await update<TravelDoc>('docs', doc.id, { name: name.trim() || doc.name, kind, description: description.trim() || undefined, wallet });
     onClose();
   }
   return (
@@ -135,13 +137,20 @@ function DocEdit({ doc, onClose }: { doc: TravelDoc; onClose: () => void }) {
             {DOC_KINDS.map((k) => <option key={k.value} value={k.value}>{k.label}</option>)}
           </select>
         </Field>
+        <div className="row-between">
+          <div>
+            <div className="label">En la cartera</div>
+            <div className="hint tiny faint">Acceso a un toque desde Inicio durante el viaje.</div>
+          </div>
+          <Switch label="En la cartera" checked={wallet} onChange={setWallet} />
+        </div>
         <Field label="Descripción" htmlFor="d-desc"><textarea id="d-desc" className="textarea" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Vuelo de ida, asiento 14C…" /></Field>
       </form>
     </Sheet>
   );
 }
 
-function DocViewer({ doc, onClose, onEdit }: { doc: TravelDoc; onClose: () => void; onEdit: () => void }) {
+export function DocViewer({ doc, onClose, onEdit }: { doc: TravelDoc; onClose: () => void; onEdit: () => void }) {
   const url = useFileUrl(doc.fileId);
   const ui = useUI();
   const isImg = doc.mime.startsWith('image/');

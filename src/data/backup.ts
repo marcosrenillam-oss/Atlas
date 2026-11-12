@@ -69,6 +69,7 @@ export async function exportTrip(tripId: string, opts: { includeFiles: boolean }
     expenses: await by('expenses'),
     settlements: await by('settlements'),
     tasks: await by('tasks'),
+    journal: await by('journal'),
     docs,
     files: await serializeFiles(files),
     packingLists: lists,

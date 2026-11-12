@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { getRate, rateToInput } from '../../services/fx';
 import { Sheet } from '../../ui/Sheet';
 import { Field, Segmented, Switch } from '../../ui/Controls';
 import { MoneyInput } from '../../ui/MoneyInput';
@@ -38,6 +39,24 @@ export function ExpenseForm({ trip, expense, participants, categories, onClose, 
   const [fAmount, setFAmount] = useState<Minor | undefined>(expense?.original?.amount);
   const [fCurrency, setFCurrency] = useState(expense?.original?.currency ?? (trip.currency === 'EUR' ? 'USD' : 'EUR'));
   const [rate, setRate] = useState(expense?.original?.rate ?? '');
+  const [rateInfo, setRateInfo] = useState<string | null>(null);
+  const rateTouched = useRef(!!expense?.original?.rate);
+  // Tipo de cambio automático (Frankfurter). Editable; sin conexión usa el último guardado.
+  useEffect(() => {
+    if (!foreign || rateTouched.current) return;
+    let alive = true;
+    setRateInfo('Buscando el tipo de cambio…');
+    void getRate(fCurrency, trip.currency).then((r) => {
+      if (!alive || rateTouched.current) return;
+      if (r) {
+        setRate(rateToInput(r.rate));
+        setRateInfo(r.cached ? `Último tipo guardado (${r.date}). Puedes cambiarlo.` : `Tipo de referencia del ${r.date}. Puedes cambiarlo por el de tu banco.`);
+      } else setRateInfo('Sin conexión ni tipo guardado: escríbelo tú.');
+    });
+    return () => {
+      alive = false;
+    };
+  }, [foreign, fCurrency, trip.currency]);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   // Con moneda extranjera, el importe en la moneda del viaje se calcula con el tipo manual.
@@ -113,13 +132,13 @@ export function ExpenseForm({ trip, expense, participants, categories, onClose, 
             <Field label="Importe pagado" error={errors.amount}>
               <div className="input-group">
                 <MoneyInput value={fAmount} currency={fCurrency} onChange={(v) => setFAmount(v)} ariaLabel="Importe en moneda extranjera" />
-                <select className="select" style={{ width: 96 }} value={fCurrency} onChange={(e) => setFCurrency(e.target.value)} aria-label="Moneda pagada">
+                <select className="select" style={{ width: 96 }} value={fCurrency} onChange={(e) => { rateTouched.current = false; setFCurrency(e.target.value); }} aria-label="Moneda pagada">
                   {CURRENCIES.filter((c) => c !== trip.currency).map((c) => <option key={c}>{c}</option>)}
                 </select>
               </div>
             </Field>
-            <Field label={`Tipo de cambio: 1 ${fCurrency} = ? ${trip.currency}`} error={errors.rate} hint="Introdúcelo tú (el del banco o la tarjeta). ATLAS no consulta cambios en Internet.">
-              <input className="input" inputMode="decimal" value={rate} onChange={(e) => setRate(e.target.value)} placeholder="0,92" />
+            <Field label={`Tipo de cambio: 1 ${fCurrency} = ? ${trip.currency}`} error={errors.rate} hint={rateInfo ?? 'Tipos de referencia de bancos centrales (Frankfurter).'}>
+              <input className="input" inputMode="decimal" value={rate} onChange={(e) => { rateTouched.current = true; setRate(e.target.value); }} placeholder="0,92" />
             </Field>
             <div className="small">Equivale a <strong className="num">{converted !== null && converted !== undefined ? formatMoney(converted, trip.currency) : '—'}</strong></div>
           </div>

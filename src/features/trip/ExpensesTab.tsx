@@ -14,6 +14,8 @@ import { Sheet } from '../../ui/Sheet';
 import { useUI } from '../../ui/UIProvider';
 import { Bars, Donut } from '../../ui/Charts';
 import { ExpenseForm } from './ExpenseForm';
+import { QuickExpense } from './QuickExpense';
+import { Zap } from 'lucide-react';
 import { categoryTone } from '../../ui/tones';
 
 type View = 'lista' | 'saldos' | 'graficos';
@@ -28,6 +30,7 @@ export function ExpensesTab({ trip }: { trip: TripWithStatus }) {
   const [filter, setFilter] = useState<'all' | 'pending' | string>('all');
   const [form, setForm] = useState<{ expense?: Expense } | null>(null);
   const [catsOpen, setCatsOpen] = useState(false);
+  const [quick, setQuick] = useState(false);
 
   const list = useMemo(() => expenses ?? [], [expenses]);
   const name = (id: string | null) => participants.find((p) => p.id === id)?.name ?? '—';
@@ -92,7 +95,10 @@ export function ExpensesTab({ trip }: { trip: TripWithStatus }) {
 
       <div className="row-between">
         <Segmented label="Vista de gastos" value={view} onChange={setView} options={[{ value: 'lista', label: 'Gastos' }, { value: 'saldos', label: 'Saldos' }, { value: 'graficos', label: 'Gráficos' }]} />
-        <button className="btn sm" onClick={() => setForm({})}><Plus /> Gasto</button>
+        <div className="row" style={{ gap: 6 }}>
+          <button className="icon-btn filled" aria-label="Gasto rápido" onClick={() => setQuick(true)}><Zap /></button>
+          <button className="btn sm" onClick={() => setForm({})}><Plus /> Gasto</button>
+        </div>
       </div>
 
       {view === 'lista' && (
@@ -209,6 +215,7 @@ export function ExpensesTab({ trip }: { trip: TripWithStatus }) {
       )}
 
       {form && <ExpenseForm trip={trip} expense={form.expense} participants={participants} categories={categories} onClose={() => setForm(null)} onManageCategories={() => setCatsOpen(true)} />}
+      {quick && <QuickExpense trip={trip} onClose={() => setQuick(false)} />}
       {catsOpen && <CategoriesSheet tripId={trip.id} categories={categories} onClose={() => setCatsOpen(false)} />}
     </div>
   );

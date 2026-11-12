@@ -52,7 +52,7 @@ export async function enqueueTrip(tripId: string): Promise<void> {
     await db.outbox.add({ entity, entityId: id, op: 'put', at: now, tripId });
   };
   await add('trips', tripId);
-  for (const e of ['participants', 'items', 'places', 'categories', 'expenses', 'settlements', 'docs', 'files', 'tasks', 'packingLists'] as EntityName[]) {
+  for (const e of ['participants', 'items', 'places', 'categories', 'expenses', 'settlements', 'docs', 'files', 'tasks', 'journal', 'packingLists'] as EntityName[]) {
     for (const id of (await table(e).where('tripId').equals(tripId).primaryKeys()) as string[]) await add(e, id);
   }
   const lists = (await db.packingLists.where('tripId').equals(tripId).primaryKeys()) as string[];

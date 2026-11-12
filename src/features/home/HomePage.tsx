@@ -1,7 +1,7 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { ChevronRight, Compass, Download, ListTodo, Plus, Users } from 'lucide-react';
+import { ChevronRight, Compass, Download, ListTodo, Map as MapIcon, Plus, Users, Wallet, WalletCards } from 'lucide-react';
 import { useTrips, type TripWithStatus } from '../../data/queries';
 import { useProfile } from '../../data/settings';
 import { db } from '../../data/db';
@@ -18,6 +18,10 @@ import { useNow } from '../../app/hooks';
 import { t } from '../../i18n';
 import { TripCard, TripRow, destinationsLabel } from '../trips/TripCard';
 import { TripForm } from '../trips/TripForm';
+import { ItineraryTab } from '../trip/ItineraryTab';
+import { QuickExpense } from '../trip/QuickExpense';
+import { WalletSheet, useWalletDocs } from '../trip/Wallet';
+import { enrichTrip } from '../../services/geo';
 
 const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
@@ -61,6 +65,8 @@ export function HomePage() {
   const isEmpty = trips && trips.length === 0;
   const mainCur = profile.currency;
   const mainMoney = money?.get(mainCur);
+
+  if (ongoing[0]) return <TripModeHome trip={ongoing[0]} name={name} now={now} />;
 
   return (
     <main className="page stagger">
@@ -274,5 +280,53 @@ function Welcome({ onCreate, hasName }: { onCreate: () => void; hasName: boolean
         Consejo: en iPhone, abre ATLAS en Safari y usa «Compartir › Añadir a pantalla de inicio» para instalarla y que tus datos se conserven de forma estable.
       </div>
     </div>
+  );
+}
+
+/** Durante un viaje en curso, Inicio es el itinerario del día: práctico y sin distracciones. */
+function TripModeHome({ trip, name, now }: { trip: TripWithStatus; name: string; now: Date }) {
+  const [quick, setQuick] = useState(false);
+  const [wallet, setWallet] = useState(false);
+  const walletDocs = useWalletDocs(trip.id) ?? [];
+  const len = tripLength(trip);
+  const n = trip.startDate ? diffDays(trip.startDate, today()) + 1 : null;
+  useEffect(() => {
+    void enrichTrip(trip.id);
+  }, [trip.id]);
+  return (
+    <main className="page stagger">
+      <div style={{ marginTop: 4 }}>
+        <span className="eyebrow-chip"><span className="dot" />{capitalize(fmt.weekday(toISODate(now)))}</span>
+      </div>
+      <div className="page-head" style={{ marginTop: 14, marginBottom: 6 }}>
+        <h1 style={{ fontSize: 34 }}>
+          {greeting(now.getHours())}
+          {name ? <>, <span className="serif grad-text">{name}</span></> : null}
+        </h1>
+      </div>
+      <div style={{ marginBottom: 14 }}><SyncBadge /></div>
+      <Link to={`/viajes/${trip.id}`} className="card link trip-mode-head" aria-label={`Abrir ${trip.name}`}>
+        <Cover trip={trip} mini />
+        <div className="grow">
+          <div className="tiny" style={{ fontWeight: 800, letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--accent)' }}>De viaje{n && len ? ` · Día ${n} de ${len}` : ''}</div>
+          <div className="ellipsis" style={{ fontWeight: 750, fontSize: 18 }}>{trip.name}</div>
+          <div className="small muted ellipsis">{destinationsLabel(trip)}</div>
+        </div>
+        <ChevronRight className="chev" />
+      </Link>
+      <div className="quick-actions" style={{ marginTop: 14 }}>
+        <button onClick={() => setQuick(true)}><div className="icon-tile" data-tone="coral"><Wallet /></div>Gasto rápido</button>
+        <button onClick={() => setWallet(true)} style={{ position: 'relative' }}>
+          <div className="icon-tile" data-tone="violet"><WalletCards /></div>Cartera
+          {walletDocs.length > 0 && <span className="badge">{walletDocs.length}</span>}
+        </button>
+        <Link to={`/viajes/${trip.id}`}><div className="icon-tile" data-tone="sky"><MapIcon /></div>Ver viaje</Link>
+      </div>
+      <section className="section" style={{ marginTop: 22 }}>
+        <ItineraryTab trip={trip} embedded />
+      </section>
+      {quick && <QuickExpense trip={trip} onClose={() => setQuick(false)} />}
+      {wallet && <WalletSheet trip={trip} onClose={() => setWallet(false)} />}
+    </main>
   );
 }

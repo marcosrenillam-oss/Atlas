@@ -434,3 +434,121 @@ nav.tabs[aria-label='Secciones del viaje']::before { background: color-mix(in sr
   }
   :root[data-theme='dark'] body::before { background: linear-gradient(to bottom, rgba(0, 0, 0, 0.35), transparent); }
 }
+
+/* ─────────── Gasto rápido ─────────── */
+.qe-amount { display: flex; align-items: baseline; justify-content: center; gap: 10px; padding: 6px 0 2px; }
+.qe-amount .num { font-family: var(--font-display); font-size: 54px; font-weight: 800; letter-spacing: -0.04em; background: var(--grad-text); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.qe-cur { border: 0; background: var(--card); box-shadow: var(--glass-edge); border-radius: 12px; padding: 6px 10px; font-weight: 700; color: var(--text-2); font-size: 15px; }
+.keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.keypad button {
+  min-height: 56px; border: 0; border-radius: 16px; font-size: 24px; font-weight: 650; color: var(--text);
+  background: var(--card); box-shadow: var(--shadow-1), var(--glass-edge); display: grid; place-items: center;
+  transition: transform 0.15s var(--spring), background 0.15s;
+}
+.keypad button:active { transform: scale(0.92); background: var(--accent-soft); }
+
+/* ─────────── Cartera ─────────── */
+.wallet-stack { display: flex; flex-direction: column; gap: 14px; }
+.wallet-pass {
+  border: 0; border-radius: 24px; padding: 18px; color: #fff; text-align: left; display: flex; flex-direction: column; gap: 14px;
+  box-shadow: 0 18px 40px -18px rgba(10, 40, 70, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.35); transition: transform 0.3s var(--spring);
+}
+.wallet-pass:active { transform: scale(0.97); }
+.wallet-pass svg { width: 26px; height: 26px; flex: none; opacity: 0.9; }
+.wp-kind { font-size: 11px; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; opacity: 0.85; }
+.wp-name { font-size: 22px; font-weight: 800; letter-spacing: -0.02em; margin-top: 2px; }
+.wp-desc { font-size: 14px; opacity: 0.9; margin-top: 2px; }
+.wp-thumb { width: 100%; max-height: 180px; object-fit: cover; border-radius: 14px; }
+.wp-open { font-size: 13px; font-weight: 650; opacity: 0.85; }
+
+/* ─────────── Tiempo y diario ─────────── */
+.weather-chip { display: inline-flex; align-items: center; gap: 5px; padding: 5px 10px; border-radius: 999px; background: var(--card); box-shadow: var(--glass-edge); font-size: 13.5px; backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur); }
+.weather-chip svg { color: var(--accent); }
+.weather-chip .rain { color: var(--accent); font-weight: 650; font-size: 12px; }
+.journal-card { border: 0; width: 100%; display: flex; flex-direction: column; gap: 10px; color: inherit; }
+.journal-text { font-family: var(--font-serif); font-style: italic; font-size: 19px; line-height: 1.35; text-align: left; color: var(--text); white-space: pre-wrap; display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical; overflow: hidden; }
+.journal-input { font-family: var(--font-serif); font-size: 20px; line-height: 1.4; }
+
+/* ─────────── Inicio en modo viaje ─────────── */
+.trip-mode-head { display: flex; align-items: center; gap: 12px; }
+.trip-mode-head .cover { width: 54px; height: 54px; border-radius: 16px; flex: none; }
+.quick-actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.quick-actions button, .quick-actions a {
+  border: 0; border-radius: 20px; padding: 12px 8px; display: flex; flex-direction: column; align-items: center; gap: 7px;
+  background: var(--card); box-shadow: var(--shadow-1), var(--glass-edge); color: var(--text); font-size: 13px; font-weight: 650;
+  backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur); transition: transform 0.25s var(--spring);
+}
+.quick-actions button:active, .quick-actions a:active { transform: scale(0.94); }
+.quick-actions .badge { position: absolute; top: -4px; right: -6px; min-width: 18px; height: 18px; border-radius: 9px; background: var(--accent-2); color: #fff; font-size: 11px; font-weight: 800; display: grid; place-items: center; padding: 0 5px; }
+.weather-strip { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; margin: 0 calc(-1 * var(--gutter)); padding: 2px var(--gutter) 6px; }
+.weather-strip::-webkit-scrollbar { display: none; }
+.wday { flex: none; width: 64px; padding: 10px 0; border-radius: 18px; display: flex; flex-direction: column; align-items: center; gap: 4px; background: var(--card); box-shadow: var(--shadow-1), var(--glass-edge); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur); }
+.wday svg { color: var(--accent); }
+.wday .dow { font-size: 12px; font-weight: 700; text-transform: capitalize; color: var(--text-2); }
+.wday .max { font-weight: 800; font-size: 16px; }
+.wday .min { font-size: 13px; color: var(--text-3); }
+.wday .rain { font-size: 11px; font-weight: 700; color: var(--accent); }
+.wday.today { background: var(--grad-brand); color: #fff; box-shadow: var(--glow); }
+.wday.today svg, .wday.today .dow, .wday.today .min, .wday.today .rain { color: #fff; }
+
+/* ─────────── Resumen del viaje ─────────── */
+.recap { display: flex; flex-direction: column; gap: 16px; }
+.recap-hero { border-radius: 28px; overflow: hidden; box-shadow: var(--shadow-2); }
+.recap-hero img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; }
+.recap-hero .cover { aspect-ratio: 16 / 10; }
+.recap-title { font-size: 30px; font-weight: 800; letter-spacing: -0.035em; }
+.recap-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.recap-grid .stat { padding: 12px; }
+.recap-grid .stat .val { font-size: 24px; }
+.recap-spent .val { font-size: 32px; }
+.recap-quote { margin: 0; font-family: var(--font-serif); font-style: italic; font-size: 22px; line-height: 1.3; color: var(--text); padding: 4px 6px; }
+
+/* ─────────── Pasaporte ─────────── */
+.badges { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.badge-card {
+  border-radius: 20px; padding: 14px 10px 12px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 6px;
+  background: var(--card); box-shadow: var(--shadow-1), var(--glass-edge); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
+}
+.badge-card:not(.on) { opacity: 0.72; }
+.badge-card.on .icon-tile { animation: pop-check 0.6s var(--spring); }
+.badge-card .b-title { font-weight: 750; font-size: 13px; line-height: 1.2; }
+.badge-card .b-text { font-size: 11.5px; color: var(--text-2); line-height: 1.25; }
+.badge-card .progress { width: 80%; margin-top: 2px; }
+
+/* ─────────── Mapas vectoriales ─────────── */
+.map-wrap { position: relative; border-radius: 26px; }
+.map { border-radius: 26px; overflow: hidden; }
+.map-loading { background: var(--card-2); animation: pulse-bg 1.4s ease-in-out infinite alternate; }
+@keyframes pulse-bg { to { opacity: 0.6; } }
+.ml-pin {
+  width: 34px; height: 34px; border-radius: 50%; border: 2.5px solid #fff; padding: 0; cursor: pointer;
+  display: grid; place-items: center; color: #fff; box-shadow: 0 6px 14px -4px rgba(10, 40, 70, 0.5);
+  transition: transform 0.25s var(--spring);
+}
+.ml-pin:hover, .ml-pin:focus-visible { transform: scale(1.15); }
+.ml-pin[data-tone='coral'] { background: linear-gradient(135deg, #ff9a6b, #ff5a5f); }
+.ml-pin[data-tone='violet'] { background: linear-gradient(135deg, #6f9bff, #3a4bd8); }
+.ml-pin[data-tone='sky'] { background: linear-gradient(135deg, #4fe0e3, #1e9ad8); }
+.ml-pin[data-tone='mint'] { background: linear-gradient(135deg, #5be3b0, #12a271); }
+.ml-pin[data-tone='amber'] { background: linear-gradient(135deg, #ffd166, #ff9f1c); }
+.ml-pin[data-tone='pink'] { background: linear-gradient(135deg, #ffb2a0, #f2667a); }
+.ml-pin[data-tone='slate'] { background: linear-gradient(135deg, #9fb3c1, #5d7484); }
+.ml-num { font-weight: 800; font-size: 14px; }
+.ml-new { animation: pop-check 0.4s var(--spring); }
+.map-card {
+  position: absolute; left: 10px; right: 10px; bottom: 10px; z-index: 5; display: flex; align-items: center; gap: 8px;
+  padding: 10px 10px 10px 14px; border-radius: 20px; background: color-mix(in srgb, var(--card-solid) 88%, transparent);
+  box-shadow: var(--shadow-2), var(--glass-edge); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
+  animation: rise 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.maplibregl-ctrl-group { border-radius: 14px !important; overflow: hidden; box-shadow: var(--shadow-1) !important; background: color-mix(in srgb, var(--card-solid) 90%, transparent) !important; }
+.maplibregl-ctrl-group button { width: 36px !important; height: 36px !important; }
+:root[data-theme='dark'] .maplibregl-ctrl-group button .maplibregl-ctrl-icon { filter: invert(1); }
+.maplibregl-ctrl-attrib { font-size: 10px; border-radius: 10px !important; }
+.maplibregl-ctrl-attrib.maplibregl-compact { background: color-mix(in srgb, var(--card-solid) 85%, transparent) !important; }
+.trip-mode-head.card.link { display: flex; }
+.quick-exp { gap: 10px; }
+.qe-amount .num { font-size: 46px; line-height: 1.15; }
+.keypad { gap: 7px; }
+.keypad button { min-height: 50px; font-size: 22px; }
+.map-card { bottom: 30px; }

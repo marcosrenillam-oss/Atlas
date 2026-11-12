@@ -7,12 +7,12 @@ const TABS = [
   { to: '/viajes', label: t('nav.trips'), Icon: Luggage, end: false },
   { to: '/explorar', label: t('nav.explore'), Icon: Compass, end: false },
   { to: '/gastos', label: t('nav.expenses'), Icon: Wallet, end: false },
-  { to: '/perfil', label: t('nav.profile'), Icon: UserRound, end: false },
+  { to: '/perfil', label: t('nav.profile'), Icon: UserRound, end: false, also: '/pasaporte' },
 ];
 
 export function TabBar() {
   const { pathname } = useLocation();
-  const idx = Math.max(0, TABS.findIndex((x) => (x.end ? pathname === x.to : pathname.startsWith(x.to))));
+  const idx = Math.max(0, TABS.findIndex((x) => (x.end ? pathname === x.to : pathname.startsWith(x.to) || (!!(x as { also?: string }).also && pathname.startsWith((x as { also?: string }).also!)))));
   return (
     <nav className="tabbar" aria-label="Navegación principal">
       <span className="tab-indicator" style={{ transform: `translateX(${idx * 100}%)` }} aria-hidden="true" />

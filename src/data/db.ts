@@ -1,6 +1,6 @@
 import Dexie, { type Table } from 'dexie';
 import type {
-  EntityName, Expense, ExpenseCategory, ItineraryItem, PackingItem, PackingList, Participant, Place,
+  EntityName, Expense, ExpenseCategory, ItineraryItem, JournalEntry, PackingItem, PackingList, Participant, Place,
   Settlement, StoredFile, Task, TravelDoc, Trip,
 } from '../domain/types';
 
@@ -32,6 +32,7 @@ export class AtlasDB extends Dexie {
   packingLists!: Table<PackingList, string>;
   packingItems!: Table<PackingItem, string>;
   tasks!: Table<Task, string>;
+  journal!: Table<JournalEntry, string>;
   outbox!: Table<OutboxEntry, number>;
   kv!: Table<KV, string>;
 
@@ -54,6 +55,8 @@ export class AtlasDB extends Dexie {
       outbox: '++seq, [entity+entityId]',
       kv: 'key',
     });
+    // v2: diario de viaje.
+    this.version(2).stores({ journal: 'id, tripId, [tripId+date]' });
   }
 }
 
@@ -61,7 +64,7 @@ export const db = new AtlasDB();
 
 export const ENTITY_TABLES: EntityName[] = [
   'trips', 'participants', 'items', 'places', 'categories', 'expenses', 'settlements',
-  'docs', 'files', 'packingLists', 'packingItems', 'tasks',
+  'docs', 'files', 'packingLists', 'packingItems', 'tasks', 'journal',
 ];
 
 export function table(entity: EntityName): Table<{ id: string; updatedAt: number; tripId?: string | null }, string> {

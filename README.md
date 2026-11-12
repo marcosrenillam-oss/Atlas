@@ -166,16 +166,28 @@ Cómo funciona:
 | **Gastos** | Resumen de todos los viajes por moneda, tu saldo global, gráfico por categorías y avance de cada presupuesto |
 | **Perfil** | Nombre, apariencia (automática, clara u oscura), moneda predeterminada, copias, sincronización, almacenamiento (uso, persistencia, limpieza de archivos sin uso), instalación, privacidad y borrado total con doble confirmación |
 
+## 6b. Novedades: durante el viaje
+
+- **Inicio = itinerario del día** mientras un viaje está en curso: día de hoy (o el que elijas), con su tiempo, sus planes y su diario. Sin cronómetros.
+- **Gasto rápido**: teclado grande, categoría en un toque, reparto a partes iguales; admite otra moneda con cambio automático.
+- **Cartera**: billetes y entradas a un toque (los billetes y entradas que importas entran solos; se puede marcar cualquier documento).
+- **Tiempo** por destino en el resumen y en cada día (Open-Meteo), guardado para verlo sin conexión.
+- **Diario** por día con texto y fotos.
+- **Resumen del viaje** animado y compartible como imagen para Stories (creada en el móvil).
+- **Pasaporte**: mapa de tus viajes, países con bandera, ciudades, días, kilómetros, años y 12 logros.
+- **Mapas vectoriales** (MapLibre + OpenFreeMap): claro/oscuro, nombres en español, pines por categoría, ficha inferior, tu ubicación, recorrido del día en curva.
+
 ## 7. Limitaciones reales
 
-- **Mapas sin conexión**: la política de OpenStreetMap prohíbe descargar teselas para uso offline, así que ATLAS no lo hace. Sin conexión verás un plano local esquemático con tus puntos, distancias aproximadas y el norte, no un mapa. Para tener cartografía offline habría que autoalojar teselas (por ejemplo, un archivo PMTiles) y añadirlas en `src/maps/provider.ts`.
+- **Mapas sin conexión**: ATLAS no descarga cartografía para uso offline (OpenStreetMap lo prohíbe y OpenFreeMap lo limita). Sin conexión verás un plano local esquemático con tus puntos, distancias aproximadas y el norte, no un mapa. Para tener cartografía offline habría que autoalojar teselas (por ejemplo, un archivo PMTiles) y añadirlas en `src/maps/provider.ts`.
 - **Rutas**: ATLAS no calcula rutas. El «recorrido del día» une las paradas en línea recta. Para navegar, usa los botones de Apple Maps o Google Maps.
 - **Búsqueda de lugares**: depende de Nominatim, gratuito con condiciones: máximo una petición por segundo, sin autocompletado y servicio sin garantías. Solo funciona con conexión.
 - **Fotos de Wikipedia**: no todos los destinos tienen imagen, y su licencia depende de cada archivo. Se guarda el crédito y el enlace a la página.
 - **PDF en iPhone**: el visor integrado de Safari a veces solo muestra la primera página. Usa «Compartir» para abrirlo en el visor del sistema.
 - **Sincronización**: no es en tiempo real; solo se ejecuta con la app abierta. Los permisos de viajeros son informativos: cualquiera con la clave del espacio accede a los viajes compartidos en él. No hay cifrado de extremo a extremo, así que usa HTTPS y tu propio servidor.
 - **Espacio**: depende del navegador. Safari en iPhone suele permitir varios GB a las apps instaladas, pero no hay una cifra garantizada. El uso real aparece en Perfil.
-- **Tipos de cambio**: los introduces tú; ATLAS no consulta cambios en Internet.
+- **Tipos de cambio**: se rellenan solos con tipos de referencia de bancos centrales (no los de tu banco o tarjeta); siempre puedes cambiarlos.
+- **Tiempo**: la previsión solo existe hasta 16 días vista; antes, la app lo indica.
 - **Idiomas**: la interfaz está en español. La estructura `src/i18n/` está preparada, pero de momento solo la navegación, las acciones comunes, los estados y las pestañas pasan por el diccionario; el resto de textos están en los componentes y habría que extraerlos para traducir la app.
 - **Probado**: en Chromium emulando iPhone 13 mini e iPhone SE, incluidos el modo avión, la persistencia y la sincronización. **No se ha probado en un iPhone físico con Safari**: conviene hacer una prueba de instalación real antes de viajar.
 
@@ -183,9 +195,11 @@ Cómo funciona:
 
 | Servicio | Para qué | Coste | Condiciones |
 |---|---|---|---|
-| OpenStreetMap (teselas) | Mapa base, solo con conexión | Gratis | Atribución visible; prohibida la descarga masiva u offline; sin garantía de servicio |
-| Nominatim (OSM) | Buscar lugares, al pulsar Buscar | Gratis | Máximo 1 petición/s, sin autocompletado, atribución |
-| Wikipedia REST API | Foto de portada opcional | Gratis | Sin clave; licencias de cada imagen en Wikimedia |
+| OpenFreeMap (mapas vectoriales de OpenStreetMap) | Mapa base con MapLibre, solo con conexión | Gratis | Sin clave ni registro; atribución visible; sin descarga masiva |
+| Nominatim (OSM) | Buscar lugares, al pulsar Buscar | Gratis | Máx. 1 petición/s, sin autocompletado, atribución |
+| Open-Meteo | Tiempo (16 días) y ubicar destinos | Gratis (uso no comercial) | Máx. 10.000 llamadas/día; CC BY 4.0; se guarda para verlo sin conexión |
+| Frankfurter | Tipos de cambio de referencia | Gratis | Sin clave; datos de bancos centrales; último tipo guardado para usarlo sin conexión |
+| Wikipedia REST API | Foto de portada opcional | Gratis | Sin clave; licencia de cada imagen en Wikimedia |
 | Apple Maps / Google Maps | Enlaces de navegación externa | Gratis | Abre la app de mapas del dispositivo |
 | GitHub Pages / Cloudflare Pages | Alojar la web | Gratis | Ver límites en la sección 2 |
 | Servidor de sincronización propio | Opcional | Gratis en tu equipo | Tú lo mantienes |

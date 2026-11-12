@@ -11,6 +11,7 @@ import { useTripActions } from '../trips/useTripActions';
 import { formatRange } from '../../lib/dates';
 import { tripLength } from '../../domain/status';
 import { save } from '../../data/repo';
+import { enrichTrip } from '../../services/geo';
 import { useProfile } from '../../data/settings';
 import type { Participant } from '../../domain/types';
 import { t } from '../../i18n';
@@ -40,6 +41,10 @@ export function TripPage() {
   const [editing, setEditing] = useState(false);
   const actions = useTripActions(() => setEditing(true));
   const ensured = useRef(false);
+  // Completa coordenadas y país de los destinos (tiempo, mapa y pasaporte).
+  useEffect(() => {
+    if (tripId) void enrichTrip(tripId);
+  }, [tripId, trip?.stages.length, trip?.origin]);
 
   // Todo viaje necesita al menos un participante (tú) para registrar gastos.
   useEffect(() => {

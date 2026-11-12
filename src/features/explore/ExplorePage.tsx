@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
-import { Compass, Plus, Search } from 'lucide-react';
+import { Compass, Globe2, Plus, Search } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { usePlaces, useTrips } from '../../data/queries';
 import { MapView, type MapMarker } from '../../maps/MapView';
 import { PLACE_CATEGORIES, placeCategoryLabel } from '../../domain/catalog';
@@ -33,11 +34,12 @@ export function ExplorePage() {
       .sort((a, b) => a.name.localeCompare(b.name, 'es'));
   }, [places, scope, cat, q]);
 
-  const markers: MapMarker[] = useMemo(
-    () => list.filter((p) => p.point).map((p) => ({ id: p.id, point: p.point!, label: p.name, sub: placeCategoryLabel(p.category), badge: '', onClick: () => setDetail(p) })),
-    [list],
-  );
   const tripName = (id: string | null) => (id ? trips.find((t) => t.id === id)?.name ?? 'Viaje' : 'General');
+  const markers: MapMarker[] = useMemo(
+    () => list.filter((p) => p.point).map((p) => ({ id: p.id, point: p.point!, label: p.name, sub: `${placeCategoryLabel(p.category)} · ${tripName(p.tripId)}`, icon: PLACE_CATEGORIES.find((c) => c.value === p.category)?.icon, tone: PLACE_TONE[p.category], onClick: () => setDetail(p) })),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [list, trips],
+  );
 
   return (
     <main className="page stagger">
@@ -45,7 +47,10 @@ export function ExplorePage() {
         <div>
           <h1><span className="serif grad-text">Explorar</span></h1>
         </div>
-        <button className="btn sm" onClick={() => setForm({})}><Plus /> Lugar</button>
+        <div className="row" style={{ gap: 6 }}>
+          <Link to="/pasaporte" className="icon-btn filled" aria-label="Tu pasaporte"><Globe2 /></Link>
+          <button className="btn sm" onClick={() => setForm({})}><Plus /> Lugar</button>
+        </div>
       </div>
       {places && places.length === 0 ? (
         <div className="stack">

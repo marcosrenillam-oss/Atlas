@@ -8,7 +8,8 @@ import type { GeoPoint, Place, PlaceCategory } from '../../domain/types';
 import { eachDay, fmt } from '../../lib/dates';
 import { formatCoords, distanceKm } from '../../maps/external';
 import { Icon } from '../../ui/Icon';
-import { PLACE_TONE } from '../../ui/tones';
+import { ITEM_TONE, PLACE_TONE } from '../../ui/tones';
+import { itemIcon } from './ItineraryTab';
 import { Empty } from '../../ui/Empty';
 import { PlaceForm } from '../places/PlaceForm';
 import { PlaceDetail } from '../places/PlaceDetail';
@@ -33,11 +34,11 @@ export function TripMapTab({ trip }: { trip: TripWithStatus }) {
 
   const markers: MapMarker[] = useMemo(() => {
     const out: MapMarker[] = filteredPlaces.map((p) => ({
-      id: p.id, point: p.point!, label: p.name, sub: placeCategoryLabel(p.category), badge: '', tone: 'muted', onClick: () => setDetail(p),
+      id: p.id, point: p.point!, label: p.name, sub: placeCategoryLabel(p.category), icon: PLACE_CATEGORIES.find((c) => c.value === p.category)?.icon, tone: PLACE_TONE[p.category], onClick: () => setDetail(p),
     }));
-    dayItems.forEach((i, n) => out.push({ id: i.id, point: i.location!.point!, label: i.title, sub: `${i.startTime ?? ''} ${i.location?.name ?? ''}`.trim(), badge: String(n + 1) }));
+    dayItems.forEach((i, n) => out.push({ id: i.id, point: i.location!.point!, label: i.title, sub: `${i.startTime ?? ''} ${i.location?.name ?? ''}`.trim(), badge: String(n + 1), tone: ITEM_TONE[i.type] }));
     if (!day) {
-      for (const i of items) if (i.location?.point && !i.placeId) out.push({ id: i.id, point: i.location.point, label: i.title, sub: i.date ? fmt.dayShort(i.date) : 'Idea', badge: '•' });
+      for (const i of items) if (i.location?.point && !i.placeId) out.push({ id: i.id, point: i.location.point, label: i.title, sub: i.date ? fmt.dayShort(i.date) : 'Idea', icon: itemIcon(i), tone: ITEM_TONE[i.type] });
     }
     return out;
   }, [filteredPlaces, dayItems, items, day]);

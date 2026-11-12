@@ -16,6 +16,10 @@ import { useUI } from '../../ui/UIProvider';
 import { appleMapsUrl, googleMapsUrl } from '../../maps/external';
 import { ItemForm, orderForTime } from './ItemForm';
 import { ITEM_TONE } from '../../ui/tones';
+import { useForecast } from '../../services/weather';
+import { WeatherChip } from '../../ui/Weather';
+import { JournalCard } from './Journal';
+import type { GeoPoint, Trip } from '../../domain/types';
 
 const IDEAS = 'ideas';
 
@@ -31,7 +35,13 @@ export function itemIcon(item: Pick<ItineraryItem, 'type' | 'title'>): string {
   return ITEM_TYPES.find((x) => x.value === item.type)?.icon ?? 'Sparkles';
 }
 
-export function ItineraryTab({ trip }: { trip: TripWithStatus }) {
+/** Punto del destino en el que estás ese día (etapa que lo cubre o, si no, el primero con coordenadas). */
+export function pointForDay(trip: Pick<Trip, 'stages'>, date: string): GeoPoint | undefined {
+  const st = trip.stages.find((s) => s.point && s.start && s.end && s.start <= date && date <= s.end) ?? trip.stages.find((s) => s.point);
+  return st?.point;
+}
+
+export function ItineraryTab({ trip, embedded }: { trip: TripWithStatus; embedded?: boolean }) {
   const items = useItems(trip.id);
   const [params, setParams] = useSearchParams();
   const [view, setView] = useState<'dia' | 'resumen'>('dia');
@@ -65,6 +75,8 @@ export function ItineraryTab({ trip }: { trip: TripWithStatus }) {
   const selected = paramDay && (paramDay === IDEAS || allDays.includes(paramDay)) ? paramDay : defaultDay;
   const selectDay = (d: string) => setParams((p) => { p.set('dia', d); return p; }, { replace: true });
   const list = byDay.get(selected) ?? [];
+  const forecast = useForecast(selected === IDEAS ? undefined : pointForDay(trip, selected));
+  const weather = forecast?.byDate.get(selected);
 
   if (items === undefined) return null;
 
@@ -98,10 +110,12 @@ export function ItineraryTab({ trip }: { trip: TripWithStatus }) {
 
   return (
     <div className="stack">
-      <div className="row-between">
-        <Segmented label="Vista del itinerario" value={view} onChange={setView} options={[{ value: 'dia', label: 'Por día' }, { value: 'resumen', label: 'Resumen' }]} />
-        <button className="btn sm" onClick={() => setForm({ date: view === 'dia' ? (selected === IDEAS ? null : selected) : null })}><Plus /> Añadir</button>
-      </div>
+      {!embedded && (
+        <div className="row-between">
+          <Segmented label="Vista del itinerario" value={view} onChange={setView} options={[{ value: 'dia', label: 'Por día' }, { value: 'resumen', label: 'Resumen' }]} />
+          <button className="btn sm" onClick={() => setForm({ date: view === 'dia' ? (selected === IDEAS ? null : selected) : null })}><Plus /> Añadir</button>
+        </div>
+      )}
 
       {view === 'dia' ? (
         <>
@@ -125,8 +139,12 @@ export function ItineraryTab({ trip }: { trip: TripWithStatus }) {
           </div>
 
           <div className="row-between">
-            <h2 className="cap" style={{ fontSize: 18, fontWeight: 650 }}>{dayLabel(selected)}</h2>
-            {extraDays.includes(selected) && <span className="pill warn">Fuera de fechas</span>}
+            <h2 className="cap" style={{ fontSize: 18, fontWeight: 650 }}>{selected === now && embedded ? 'Hoy' : dayLabel(selected)}</h2>
+            <div className="row" style={{ gap: 6 }}>
+              {extraDays.includes(selected) && <span className="pill warn">Fuera de fechas</span>}
+              {weather && <WeatherChip w={weather} />}
+              {embedded && <button className="btn sm" onClick={() => setForm({ date: selected === IDEAS ? null : selected })} aria-label="Añadir al itinerario"><Plus /></button>}
+            </div>
           </div>
 
           {!allDays.length && selected === IDEAS && !list.length && (
@@ -144,6 +162,7 @@ export function ItineraryTab({ trip }: { trip: TripWithStatus }) {
               {list.map((it, idx) => <TimelineItem key={it.id} item={it} onOpen={() => setForm({ item: it, date: it.date })} onMore={() => more(it, idx)} />)}
             </ol>
           )}
+          {selected !== IDEAS && <JournalCard tripId={trip.id} date={selected} />}
         </>
       ) : (
         <Overview days={allDays} tripDays={tripDays} byDay={byDay} onOpenDay={(d) => { selectDay(d); setView('dia'); }} />

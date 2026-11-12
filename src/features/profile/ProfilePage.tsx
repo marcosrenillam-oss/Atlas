@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
+import { Link } from 'react-router-dom';
+import { ChevronRight, Globe2 } from 'lucide-react';
 import {
   CloudCog, Database, Download, HardDrive, Info, Languages, Moon, RefreshCw, ShieldCheck, Smartphone, Trash2, Upload, Wallet,
 } from 'lucide-react';
@@ -24,11 +26,13 @@ export function ProfilePage() {
   const ui = useUI();
   const [name, setName] = useState(profile.name);
   const [city, setCity] = useState(profile.homeCity ?? '');
+  // Lo que escribes nunca se pisa: el perfil guardado solo rellena campos que no has tocado.
+  const dirty = useRef({ name: false, city: false });
   useEffect(() => {
-    setCity(profile.homeCity ?? '');
+    if (!dirty.current.city) setCity(profile.homeCity ?? '');
   }, [profile.homeCity]);
   useEffect(() => {
-    setName(profile.name);
+    if (!dirty.current.name) setName(profile.name);
   }, [profile.name]);
   const [syncOpen, setSyncOpen] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
@@ -98,12 +102,21 @@ export function ProfilePage() {
           <span className="avatar">{initials(name || 'Tú')}</span>
           <div className="grow">
             <label className="label" htmlFor="pf-name">Tu nombre</label>
-            <input id="pf-name" className="input" style={{ marginTop: 4 }} value={name} placeholder="Cómo quieres que te salude ATLAS" onChange={(e) => setName(e.target.value)} onBlur={() => void saveProfile({ name: name.trim() })} />
+            <input id="pf-name" className="input" style={{ marginTop: 4 }} value={name} placeholder="Cómo quieres que te salude ATLAS" onChange={(e) => { dirty.current.name = true; setName(e.target.value); }} onBlur={() => void saveProfile({ name: name.trim() })} />
             <label className="label" htmlFor="pf-city" style={{ display: 'block', marginTop: 12 }}>Tu ciudad de origen</label>
-            <input id="pf-city" className="input" style={{ marginTop: 4 }} value={city} placeholder="Madrid" onChange={(e) => setCity(e.target.value)} onBlur={() => void saveProfile({ homeCity: city.trim() })} />
+            <input id="pf-city" className="input" style={{ marginTop: 4 }} value={city} placeholder="Madrid" onChange={(e) => { dirty.current.city = true; setCity(e.target.value); }} onBlur={() => void saveProfile({ homeCity: city.trim() })} />
             <span className="hint tiny faint">Se rellena sola en «Salgo desde» al crear un viaje.</span>
           </div>
         </div>
+
+        <Link to="/pasaporte" className="card link row passport-link">
+          <div className="icon-tile lg" data-tone="violet"><Globe2 /></div>
+          <div className="grow">
+            <div style={{ fontWeight: 750, fontSize: 17 }}>Tu pasaporte</div>
+            <div className="small muted">Países, kilómetros, días viajados y logros</div>
+          </div>
+          <ChevronRight className="chev" />
+        </Link>
 
         <section>
           <div className="section-head"><h2>Preferencias</h2></div>

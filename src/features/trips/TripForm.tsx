@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ImagePlus, Loader2, MapPin, Plus, Search, Trash2, X } from 'lucide-react';
 import { Sheet } from '../../ui/Sheet';
 import { Field, Segmented, Stepper } from '../../ui/Controls';
@@ -63,6 +63,11 @@ export function TripForm({ open, onClose, trip, onSaved }: { open: boolean; onCl
   const fileInput = useRef<HTMLInputElement>(null);
   const createdCover = useRef<string | null>(null);
   const editing = !!trip;
+  // El perfil se carga de forma asíncrona: si llega después de abrir el formulario, rellena el origen.
+  const originTouched = useRef(false);
+  useEffect(() => {
+    if (!trip && !originTouched.current && profile.homeCity) setD((x) => (x.origin ? x : { ...x, origin: profile.homeCity! }));
+  }, [trip, profile.homeCity]);
 
   const set = <K extends keyof Draft>(k: K, v: Draft[K]) => setD((x) => ({ ...x, [k]: v }));
   const setStage = (i: number, patch: Partial<Stage>) => setD((x) => ({ ...x, stages: x.stages.map((s, j) => (j === i ? { ...s, ...patch } : s)) }));
@@ -181,7 +186,7 @@ export function TripForm({ open, onClose, trip, onSaved }: { open: boolean; onCl
         </Field>
 
         <Field label="Salgo desde" htmlFor="t-origin" hint="Aparece en el billete de la portada.">
-          <input id="t-origin" className="input" value={d.origin} onChange={(e) => set('origin', e.target.value)} placeholder="Madrid" autoComplete="address-level2" enterKeyHint="next" />
+          <input id="t-origin" className="input" value={d.origin} onChange={(e) => { originTouched.current = true; set('origin', e.target.value); }} placeholder="Madrid" autoComplete="address-level2" enterKeyHint="next" />
         </Field>
 
         <div className="field">

@@ -22,6 +22,8 @@ export interface Stage {
   id: string;
   name: string;
   country?: string;
+  /** Código ISO del país (PT, ES…), para el pasaporte. */
+  countryCode?: string;
   start?: ISODate;
   end?: ISODate;
   point?: GeoPoint;
@@ -37,6 +39,7 @@ export interface Trip extends Base {
   name: string;
   /** Ciudad de salida (se muestra en el billete de la portada). */
   origin?: string;
+  originPoint?: GeoPoint;
   stages: Stage[];
   startDate?: ISODate;
   endDate?: ISODate;
@@ -151,6 +154,8 @@ export interface TravelDoc extends Base {
   fileId: string;
   mime: string;
   size: number;
+  /** En la cartera: acceso a un toque durante el viaje. */
+  wallet?: boolean;
 }
 
 /** Binarios (fotos, PDF…). Se guardan como Blob en IndexedDB. */
@@ -184,7 +189,15 @@ export interface Task extends Base {
   due?: ISODate;
 }
 
+/** Diario: una entrada por día del viaje. */
+export interface JournalEntry extends Base {
+  tripId: string;
+  date: ISODate;
+  text: string;
+  photoIds: string[];
+}
+
 /** Entidades que se registran en la cola de sincronización. */
 export type EntityName =
   | 'trips' | 'participants' | 'items' | 'places' | 'categories' | 'expenses' | 'settlements'
-  | 'docs' | 'files' | 'packingLists' | 'packingItems' | 'tasks';
+  | 'docs' | 'files' | 'packingLists' | 'packingItems' | 'tasks' | 'journal';

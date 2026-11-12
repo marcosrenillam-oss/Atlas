@@ -20,6 +20,10 @@ import { Icon } from '../../ui/Icon';
 import { db } from '../../data/db';
 import { itemIcon } from './ItineraryTab';
 import { ITEM_TONE } from '../../ui/tones';
+import { WalletSheet, useWalletDocs } from './Wallet';
+import { RecapSheet } from './Recap';
+import { TripWeather } from './TripWeather';
+import { Sparkles, WalletCards } from 'lucide-react';
 
 const ROLE_LABEL: Record<Role, string> = { owner: 'Organizador', editor: 'Puede editar', viewer: 'Solo lectura' };
 
@@ -37,6 +41,9 @@ export function SummaryTab({ trip }: { trip: TripWithStatus }) {
   const participants = useParticipants(trip.id) ?? [];
   const tasks = useTasks(trip.id) ?? [];
   const [peopleOpen, setPeopleOpen] = useState(false);
+  const [walletOpen, setWalletOpen] = useState(false);
+  const [recapOpen, setRecapOpen] = useState(false);
+  const walletDocs = useWalletDocs(trip.id) ?? [];
   const [newTask, setNewTask] = useState('');
   const ui = useUI();
   const sync = useSyncState();
@@ -74,6 +81,17 @@ export function SummaryTab({ trip }: { trip: TripWithStatus }) {
 
   return (
     <div className="stack-lg stagger">
+      <div className="quick-actions">
+        <button onClick={() => setWalletOpen(true)} style={{ position: 'relative' }}>
+          <div className="icon-tile" data-tone="violet"><WalletCards /></div>Cartera
+          {walletDocs.length > 0 && <span className="badge">{walletDocs.length}</span>}
+        </button>
+        <button onClick={() => setRecapOpen(true)}><div className="icon-tile" data-tone="amber"><Sparkles /></div>Resumen</button>
+        <Link to={`/viajes/${trip.id}/gastos`}><div className="icon-tile" data-tone="coral"><Wallet /></div>Gastos</Link>
+      </div>
+
+      <TripWeather trip={trip} />
+
       {/* Próxima actividad */}
       {nextItem && (
         <Link to={`/viajes/${trip.id}/itinerario?dia=${nextItem.date}`} className="card link row" style={{ gap: 12 }}>
@@ -231,6 +249,8 @@ export function SummaryTab({ trip }: { trip: TripWithStatus }) {
         </div>
       </section>
 
+      {walletOpen && <WalletSheet trip={trip} onClose={() => setWalletOpen(false)} />}
+      {recapOpen && <RecapSheet trip={trip} onClose={() => setRecapOpen(false)} />}
       {peopleOpen && <PeopleSheet trip={trip} participants={participants} onClose={() => setPeopleOpen(false)} />}
     </div>
   );
