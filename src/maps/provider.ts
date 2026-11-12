@@ -1,12 +1,8 @@
 /**
  * Proveedor de mapas (independiente del motor). OpenFreeMap: mapas vectoriales de OpenStreetMap,
  * gratuitos, sin clave ni registro, con atribución obligatoria (MapLibre la muestra sola).
- * https://openfreemap.org — Para cambiar de proveedor basta con cambiar estas URLs de estilo.
- * No se descargan zonas para uso offline: sin conexión se usa el plano local de lugares guardados.
+ * Estilo «Liberty»: con color y con puntos de interés (bares, cafeterías, tiendas…) al acercarse.
+ * En modo oscuro se repinta el mismo estilo para conservar color y comercios.
  */
-export const MAP_STYLES = {
-  light: 'https://tiles.openfreemap.org/styles/positron',
-  dark: 'https://tiles.openfreemap.org/styles/dark',
-} as const;
-
-export const styleForTheme = () => (document.documentElement.dataset.theme === 'dark' ? MAP_STYLES.dark : MAP_STYLES.light);
+export const MAP_STYLE = 'https://tiles.openfreemap.org/styles/liberty';
+export const isDarkTheme = () => document.documentElement.dataset.theme === 'dark';

@@ -551,7 +551,8 @@ nav.tabs[aria-label='Secciones del viaje']::before { background: color-mix(in sr
 .qe-amount .num { font-size: 46px; line-height: 1.15; }
 .keypad { gap: 7px; }
 .keypad button { min-height: 50px; font-size: 22px; }
-.map-card { bottom: 30px; }
+.map-card { top: 10px; bottom: auto; right: 10px; z-index: 6; animation-name: drop-in; }
+@keyframes drop-in { from { opacity: 0; transform: translateY(-10px) scale(0.98); } }
 
 /* ─────────── Mundo ATLAS ─────────── */
 .world { position: fixed; inset: 0; z-index: 30; background: #cdebf0; overflow: hidden; }
@@ -627,3 +628,4 @@ nav.tabs[aria-label='Secciones del viaje']::before { background: color-mix(in sr
 .world-teaser:hover .wt-img { transform: scale(1.03); }
 .world-teaser::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to top, rgba(5, 30, 50, 0.72), rgba(5, 30, 50, 0.05) 60%); }
 .wt-body { z-index: 1; max-width: 85%; }
+.map-wrap:has(.map-card) .maplibregl-ctrl-top-right { opacity: 0; pointer-events: none; transition: opacity 0.2s; }

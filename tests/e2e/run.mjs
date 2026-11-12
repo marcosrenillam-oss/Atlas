@@ -613,6 +613,34 @@ async function createTrip(page, { name, stages, start, end, companions = [], bud
     globalThis.__page = () => A.page;
   });
 
+  await step('Mapa a color: al acercarse salen bares y tiendas; tocar uno y guardarlo', async () => {
+    const G = await newDevice(browser, 'mapa');
+    const pg = G.page;
+    globalThis.__page = () => pg;
+    await pg.goto(`${BASE}/explorar`);
+    await pg.locator('.map canvas').waitFor({ timeout: 30000 });
+    await pg.waitForFunction(() => document.querySelector('.map')?.__map?.isStyleLoaded());
+    await pg.evaluate(() => document.querySelector('.map').__map.jumpTo({ center: [-9.1393, 38.7107], zoom: 17 }));
+    const hit = await pg.waitForFunction(() => {
+      const m = document.querySelector('.map').__map;
+      const r = m.getContainer().getBoundingClientRect();
+      const fs = m.queryRenderedFeatures({ layers: ['poi_r1', 'poi_r7', 'poi_r20'].filter((l) => m.getLayer(l)) });
+      const f = fs.find((x) => { const q = m.project(x.geometry.coordinates); return x.properties.name && q.x > 40 && q.x < r.width - 60 && q.y > 120 && q.y < Math.min(r.height, innerHeight - r.top - 120); });
+      if (!f) return null;
+      const q = m.project(f.geometry.coordinates);
+      return { name: f.properties['name:es'] || f.properties['name:latin'] || f.properties.name, x: r.left + q.x, y: r.top + q.y };
+    }, null, { timeout: 20000 }).then((h) => h.jsonValue());
+    await pg.mouse.click(hit.x, hit.y);
+    await pg.getByRole('dialog', { name: hit.name }).waitFor();
+    await shot(pg, '25-mapa-poi');
+    await pg.getByRole('dialog', { name: hit.name }).getByRole('button', { name: /Guardar/ }).click();
+    assert.equal(await pg.getByLabel('Nombre', { exact: true }).inputValue(), hit.name);
+    await sheetSave(pg);
+    await pg.getByText(hit.name).first().waitFor();
+    await G.ctx.close();
+    globalThis.__page = () => A.page;
+  });
+
   await step('Sin errores de consola', async () => {
     assert.deepEqual(consoleErrors, []);
   });

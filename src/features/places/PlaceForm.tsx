@@ -10,17 +10,19 @@ import type { GeoPoint, Place, PlaceCategory } from '../../domain/types';
 import { save, update } from '../../data/repo';
 import { useTrips } from '../../data/queries';
 
-export function PlaceForm({ place, tripId, initialPoint, near, onClose, lockTrip }: {
+export function PlaceForm({ place, tripId, initialPoint, initialName, initialCategory, near, onClose, lockTrip }: {
   place?: Place;
   tripId: string | null;
   initialPoint?: GeoPoint;
+  initialName?: string;
+  initialCategory?: PlaceCategory;
   near?: GeoPoint;
   onClose: () => void;
   lockTrip?: boolean;
 }) {
   const ui = useUI();
   const trips = useTrips() ?? [];
-  const [d, setD] = useState<Partial<Place>>(() => place ?? { tripId, category: 'actividad', photoIds: [], point: initialPoint });
+  const [d, setD] = useState<Partial<Place>>(() => place ?? { tripId, name: initialName, category: initialCategory ?? 'actividad', photoIds: [], point: initialPoint });
   const [error, setError] = useState<string | null>(null);
   const set = <K extends keyof Place>(k: K, v: Place[K]) => setD((x) => ({ ...x, [k]: v }));
 

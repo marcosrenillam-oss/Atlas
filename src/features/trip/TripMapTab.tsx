@@ -22,7 +22,7 @@ export function TripMapTab({ trip }: { trip: TripWithStatus }) {
   const [cat, setCat] = useState<PlaceCategory | 'all'>('all');
   const [day, setDay] = useState<string>('');
   const [detail, setDetail] = useState<Place | null>(null);
-  const [form, setForm] = useState<{ point?: GeoPoint } | null>(null);
+  const [form, setForm] = useState<{ point?: GeoPoint; name?: string; category?: PlaceCategory } | null>(null);
   const days = eachDay(trip.startDate ?? '', trip.endDate ?? trip.startDate ?? '');
   const center = trip.stages.find((s) => s.point)?.point;
 
@@ -64,7 +64,7 @@ export function TripMapTab({ trip }: { trip: TripWithStatus }) {
           ))}
         </div>
       )}
-      <MapView markers={markers} route={route} fallbackCenter={center} onPick={(p) => setForm({ point: p })} />
+      <MapView markers={markers} route={route} fallbackCenter={center} onPick={(p) => setForm({ point: p })} onSavePoi={(poi) => setForm({ point: poi.point, name: poi.name, category: poi.category })} />
       {day && route.length > 1 && (
         <div className="notice small"><Route /> {route.length} paradas · {routeKm.toFixed(1).replace('.', ',')} km en línea recta. El trazado une las paradas en orden; no es una ruta de navegación.</div>
       )}
@@ -91,7 +91,7 @@ export function TripMapTab({ trip }: { trip: TripWithStatus }) {
           </div>
         )}
       </section>
-      {form && <PlaceForm tripId={trip.id} lockTrip initialPoint={form.point} near={center} onClose={() => setForm(null)} />}
+      {form && <PlaceForm tripId={trip.id} lockTrip initialPoint={form.point} initialName={form.name} initialCategory={form.category} near={center} onClose={() => setForm(null)} />}
       {detail && <PlaceDetail place={places.find((p) => p.id === detail.id) ?? detail} onClose={() => setDetail(null)} />}
     </div>
   );

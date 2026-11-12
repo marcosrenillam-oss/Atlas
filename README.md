@@ -175,7 +175,7 @@ Cómo funciona:
 - **Diario** por día con texto y fotos.
 - **Resumen del viaje** animado y compartible como imagen para Stories (creada en el móvil).
 - **Pasaporte**: mapa de tus viajes, países con bandera, ciudades, días, kilómetros, años y 12 logros.
-- **Mapas vectoriales** (MapLibre + OpenFreeMap): claro/oscuro, nombres en español, pines por categoría, ficha inferior, tu ubicación, recorrido del día en curva.
+- **Mapas vectoriales a color** (MapLibre + OpenFreeMap «Liberty» recoloreado con la paleta Mediterráneo): claro/oscuro, nombres en español, pines por categoría, tu ubicación, recorrido del día en curva. Al acercarte a una ciudad aparecen bares, cafés, restaurantes, tiendas, museos, hoteles y transporte de OpenStreetMap; tócalos para ver qué son, cómo llegar o guardarlos como lugar (nombre, categoría y ubicación ya rellenos).
 
 ## 6c. Mundo ATLAS (Explorar)
 

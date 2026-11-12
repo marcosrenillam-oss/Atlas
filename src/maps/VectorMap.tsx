@@ -2,11 +2,11 @@ import { useEffect, useRef, useState } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import maplibregl, { type Map as MLMap, type Marker } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
-import { Navigation, X, MapPinPlus } from 'lucide-react';
+import { Navigation, X, MapPinPlus, Bookmark } from 'lucide-react';
 import type { GeoPoint } from '../domain/types';
 import { Icon } from '../ui/Icon';
 import { appleMapsUrl } from './external';
-import { styleForTheme } from './provider';
+import { MAP_STYLE, isDarkTheme } from './provider';
 import type { MapMarker, MapViewProps } from './MapView';
 
 /** Curva suave entre dos puntos (para dibujar el recorrido del día). */
@@ -20,6 +20,59 @@ function arc(a: GeoPoint, b: GeoPoint, steps = 24): [number, number][] {
     out.push([(1 - t) ** 2 * a.lng + 2 * (1 - t) * t * cx + t ** 2 * b.lng, (1 - t) ** 2 * a.lat + 2 * (1 - t) * t * cy + t ** 2 * b.lat]);
   }
   return out;
+}
+
+/** Paleta ATLAS sobre el estilo Liberty (claro) o repintado nocturno (oscuro). */
+function recolor(map: MLMap, dark: boolean) {
+  const set = (id: string, prop: string, value: unknown) => {
+    try {
+      if (map.getLayer(id)) map.setPaintProperty(id, prop, value);
+    } catch {
+      /* capa sin esa propiedad */
+    }
+  };
+  for (const layer of map.getStyle().layers ?? []) {
+    const id = layer.id;
+    if (layer.type === 'background') set(id, 'background-color', dark ? '#0e1f2e' : '#f6f1e7');
+    else if (layer.type === 'fill') {
+      if (id.startsWith('water')) set(id, 'fill-color', dark ? '#1b4e72' : '#a5dde8');
+      else if (/park|grass|wood|wetland|pitch|cemetery/.test(id)) set(id, 'fill-color', dark ? '#133a2d' : id.includes('wood') ? '#bfe4b3' : '#cfeeca');
+      else if (id.includes('residential')) set(id, 'fill-color', dark ? '#13283a' : '#efe9de');
+      else if (id.includes('sand')) set(id, 'fill-color', dark ? '#2b2a22' : '#f3e4bd');
+      else if (dark && !id.includes('ice') && !id.includes('building')) set(id, 'fill-color', '#152c40');
+      if (/building/.test(id)) set(id, 'fill-color', dark ? '#1d3850' : '#ebe0cf');
+      // Las tramas (zonas peatonales…) se ven a rayas en oscuro: las suavizamos.
+      if ((layer.paint as Record<string, unknown> | undefined)?.['fill-pattern']) set(id, 'fill-opacity', dark ? 0.08 : 0.5);
+    } else if (layer.type === 'fill-extrusion') {
+      set(id, 'fill-extrusion-color', dark ? '#1f3a52' : '#ece1d0');
+    } else if (layer.type === 'line') {
+      if (id.startsWith('waterway')) set(id, 'line-color', dark ? '#1b4e72' : '#8fd2e0');
+      else if (dark && /road|highway|bridge|tunnel|street|path|rail/.test(id)) set(id, 'line-color', id.includes('casing') ? '#0b1824' : '#2c4b65');
+    } else if (layer.type === 'symbol' && dark) {
+      set(id, 'text-color', '#dbe8f2');
+      set(id, 'text-halo-color', '#0e1f2e');
+    }
+  }
+}
+
+/** Tipo de lugar (OpenStreetMap) → texto y categoría de ATLAS. */
+const POI_LAYERS = ['poi_r1', 'poi_r7', 'poi_r20', 'poi_transit'];
+export function poiInfo(cls: string, sub: string): { label: string; category: 'restaurante' | 'museo' | 'actividad' | 'hotel' | 'mirador' | 'compras' | 'transporte' | 'otro' } {
+  const k = `${cls} ${sub}`;
+  if (/bar|pub|beer|biergarten/.test(k)) return { label: 'Bar', category: 'restaurante' };
+  if (/cafe|coffee/.test(k)) return { label: 'Cafetería', category: 'restaurante' };
+  if (/ice_cream/.test(k)) return { label: 'Heladería', category: 'restaurante' };
+  if (/fast_food/.test(k)) return { label: 'Comida rápida', category: 'restaurante' };
+  if (/restaurant|food/.test(k)) return { label: 'Restaurante', category: 'restaurante' };
+  if (/bakery/.test(k)) return { label: 'Panadería', category: 'compras' };
+  if (/museum|art_gallery|gallery/.test(k)) return { label: 'Museo', category: 'museo' };
+  if (/lodging|hotel|hostel|guest/.test(k)) return { label: 'Alojamiento', category: 'hotel' };
+  if (/attraction|viewpoint/.test(k)) return { label: 'Lugar de interés', category: 'mirador' };
+  if (/railway|bus|subway|tram|ferry|airport|aerialway/.test(k)) return { label: 'Transporte', category: 'transporte' };
+  if (/shop|clothes|grocery|supermarket|mall|books|gift|jewel|shoes|alcohol|convenience|department/.test(k)) return { label: 'Tienda', category: 'compras' };
+  if (/theatre|cinema|music|park|zoo|stadium|sports/.test(k)) return { label: 'Ocio', category: 'actividad' };
+  if (/pharmacy/.test(k)) return { label: 'Farmacia', category: 'otro' };
+  return { label: 'Lugar', category: 'otro' };
 }
 
 /** Nombres en español cuando OpenStreetMap los tiene. */
@@ -49,13 +102,16 @@ function addRoute(map: MLMap, route?: GeoPoint[]) {
   }
 }
 
-export default function VectorMap({ markers, route, className, onPick, fallbackCenter, singleZoom = 13.5, onFail }: MapViewProps & { onFail: () => void }) {
+export default function VectorMap({ markers, route, className, onPick, onSavePoi, fallbackCenter, singleZoom = 13.5, onFail }: MapViewProps & { onFail: () => void }) {
   const el = useRef<HTMLDivElement>(null);
   const map = useRef<MLMap | null>(null);
   const live = useRef<{ marker: Marker; root: Root }[]>([]);
   const [ready, setReady] = useState(false);
   const [selected, setSelected] = useState<MapMarker | null>(null);
   const [picked, setPicked] = useState<GeoPoint | null>(null);
+  const [poi, setPoi] = useState<{ name: string; label: string; category: ReturnType<typeof poiInfo>['category']; point: GeoPoint } | null>(null);
+  const onSavePoiRef = useRef(onSavePoi);
+  onSavePoiRef.current = onSavePoi;
   const pickMarker = useRef<Marker | null>(null);
   const routeRef = useRef(route);
   routeRef.current = route;
@@ -70,7 +126,7 @@ export default function VectorMap({ markers, route, className, onPick, fallbackC
     try {
       m = new maplibregl.Map({
         container: el.current,
-        style: styleForTheme(),
+        style: MAP_STYLE,
         center: fallbackCenter ? [fallbackCenter.lng, fallbackCenter.lat] : [-3.7, 40.2],
         zoom: fallbackCenter ? 10 : 4,
         attributionControl: { compact: true },
@@ -84,6 +140,7 @@ export default function VectorMap({ markers, route, className, onPick, fallbackC
       return;
     }
     map.current = m;
+    (el.current as HTMLDivElement & { __map?: MLMap }).__map = m; // acceso para pruebas E2E
     m.addControl(new maplibregl.NavigationControl({ showCompass: true, showZoom: false, visualizePitch: false }), 'top-right');
     m.addControl(new maplibregl.GeolocateControl({ positionOptions: { enableHighAccuracy: true }, trackUserLocation: false, showUserLocation: true }), 'top-right');
     let loaded = false;
@@ -92,16 +149,33 @@ export default function VectorMap({ markers, route, className, onPick, fallbackC
       loaded = true;
       clearTimeout(timeout);
       spanishLabels(m);
+      recolor(m, isDarkTheme());
       addRoute(m, routeRef.current);
       setReady(true);
     });
     m.on('click', (e) => {
       if ((e.originalEvent.target as HTMLElement).closest('.ml-pin')) return;
       setSelected(null);
+      // ¿Has tocado un bar, una tienda, un museo…?
+      const layers = POI_LAYERS.filter((id) => m.getLayer(id));
+      const f = layers.length ? m.queryRenderedFeatures([[e.point.x - 10, e.point.y - 10], [e.point.x + 10, e.point.y + 10]], { layers })[0] : undefined;
+      if (f) {
+        const props = f.properties as Record<string, string>;
+        const name = props['name:es'] || props['name:latin'] || props.name;
+        if (name) {
+          const info = poiInfo(String(props.class ?? ''), String(props.subclass ?? ''));
+          const g = f.geometry as { type: string; coordinates: number[] };
+          const point = g.type === 'Point' ? { lat: g.coordinates[1], lng: g.coordinates[0] } : { lat: e.lngLat.lat, lng: e.lngLat.lng };
+          setPicked(null);
+          setPoi({ name, ...info, point });
+          return;
+        }
+      }
+      setPoi(null);
       if (onPickRef.current) setPicked({ lat: e.lngLat.lat, lng: e.lngLat.lng });
     });
     // Cambio de tema claro/oscuro → cambia el estilo del mapa.
-    const mo = new MutationObserver(() => m.setStyle(styleForTheme()));
+    const mo = new MutationObserver(() => m.isStyleLoaded() && recolor(m, isDarkTheme()));
     mo.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
     return () => {
       clearTimeout(timeout);
@@ -185,6 +259,17 @@ export default function VectorMap({ markers, route, className, onPick, fallbackC
           <a className="icon-btn filled" href={appleMapsUrl(selected.point, selected.label)} target="_blank" rel="noopener" aria-label="Cómo llegar"><Navigation /></a>
           {selected.onClick && <button className="btn sm" onClick={() => selected.onClick!()}>Detalles</button>}
           <button className="icon-btn sm muted" aria-label="Cerrar" onClick={() => setSelected(null)}><X /></button>
+        </div>
+      )}
+      {poi && (
+        <div className="map-card" role="dialog" aria-label={poi.name}>
+          <div className="grow" style={{ minWidth: 0 }}>
+            <div className="ellipsis" style={{ fontWeight: 750 }}>{poi.name}</div>
+            <div className="small muted">{poi.label}</div>
+          </div>
+          <a className="icon-btn filled" href={appleMapsUrl(poi.point, poi.name)} target="_blank" rel="noopener" aria-label="Cómo llegar"><Navigation /></a>
+          {onSavePoiRef.current && <button className="btn sm" onClick={() => { onSavePoiRef.current?.(poi); setPoi(null); }}><Bookmark /> Guardar</button>}
+          <button className="icon-btn sm muted" aria-label="Cerrar" onClick={() => setPoi(null)}><X /></button>
         </div>
       )}
       {picked && (

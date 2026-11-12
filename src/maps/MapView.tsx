@@ -1,6 +1,6 @@
 import { lazy, Suspense, useState } from 'react';
 import { useOnline } from '../app/hooks';
-import type { GeoPoint } from '../domain/types';
+import type { GeoPoint, PlaceCategory } from '../domain/types';
 import type { Tone } from '../ui/tones';
 import { OfflinePlot } from './OfflinePlot';
 
@@ -20,6 +20,8 @@ export interface MapViewProps {
   route?: GeoPoint[];
   className?: string;
   onPick?: (p: GeoPoint) => void;
+  /** Guardar un bar, tienda, museo… del mapa en «Mis lugares». */
+  onSavePoi?: (poi: { name: string; category: PlaceCategory; point: GeoPoint }) => void;
   fallbackCenter?: GeoPoint;
   /** Zoom con un solo marcador (calle ≈ 14, país ≈ 4). */
   singleZoom?: number;

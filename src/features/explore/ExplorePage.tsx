@@ -23,7 +23,7 @@ export function ExplorePage() {
   const [cat, setCat] = useState<PlaceCategory | 'all'>('all');
   const [q, setQ] = useState('');
   const [detail, setDetail] = useState<Place | null>(null);
-  const [form, setForm] = useState<{ point?: GeoPoint } | null>(null);
+  const [form, setForm] = useState<{ point?: GeoPoint; name?: string; category?: PlaceCategory } | null>(null);
 
   const list = useMemo(() => {
     const nq = norm(q.trim());
@@ -63,7 +63,7 @@ export function ExplorePage() {
 
       {places && places.length === 0 ? (
         <div className="stack">
-          <MapView markers={[]} onPick={(p) => setForm({ point: p })} />
+          <MapView markers={[]} onPick={(p) => setForm({ point: p })} onSavePoi={(poi) => setForm({ point: poi.point, name: poi.name, category: poi.category })} />
           <div className="card">
             <Empty icon={Compass} title="Guarda tus lugares" text={online ? 'Busca un sitio o toca el mapa para guardarlo. Luego podrás añadirlo a cualquier itinerario.' : 'Sin conexión puedes guardar lugares con coordenadas o tu ubicación actual.'}
               action={<button className="btn" onClick={() => setForm({})}><Plus /> Añadir lugar</button>} />
@@ -84,7 +84,7 @@ export function ExplorePage() {
               <button key={c.value} className="chip" aria-pressed={cat === c.value} onClick={() => setCat(c.value)}><Icon name={c.icon} /> {c.label}</button>
             ))}
           </div>
-          <MapView markers={markers} onPick={(p) => setForm({ point: p })} />
+          <MapView markers={markers} onPick={(p) => setForm({ point: p })} onSavePoi={(poi) => setForm({ point: poi.point, name: poi.name, category: poi.category })} />
           <div className="input-group" style={{ position: 'relative' }}>
             <Search size={17} style={{ position: 'absolute', left: 13, top: 14, color: 'var(--text-3)' }} aria-hidden="true" />
             <input className="input" type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar en tus lugares" style={{ paddingLeft: 38 }} aria-label="Buscar en tus lugares" />
@@ -106,7 +106,7 @@ export function ExplorePage() {
           )}
         </div>
       )}
-      {form && <PlaceForm tripId={scope !== 'all' && scope !== 'general' ? scope : null} initialPoint={form.point} onClose={() => setForm(null)} />}
+      {form && <PlaceForm tripId={scope !== 'all' && scope !== 'general' ? scope : null} initialPoint={form.point} initialName={form.name} initialCategory={form.category} onClose={() => setForm(null)} />}
       {detail && <PlaceDetail place={places?.find((p) => p.id === detail.id) ?? detail} onClose={() => setDetail(null)} />}
     </main>
   );
