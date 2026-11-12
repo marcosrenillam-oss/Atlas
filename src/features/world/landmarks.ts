@@ -1,5 +1,13 @@
+import eu from './data/eu.json';
+import am from './data/am.json';
+import af from './data/af.json';
+import asia from './data/as.json';
+import oc from './data/oc.json';
+import { layoutWorld } from './layout';
+
 /**
- * Monumentos del Mundo ATLAS. Posición en el mundo 3D (x este, z sur) agrupada por continentes.
+ * Monumentos del Mundo ATLAS: uno por cada país del mundo (193 miembros de la ONU + Vaticano y Palestina).
+ * La posición se calcula a partir de la latitud y longitud reales, separando los que quedarían pegados.
  * Las fotos se descargaron una vez de Wikimedia Commons (ver public/world/credits.json).
  */
 export type Continent = 'na' | 'sa' | 'eu' | 'af' | 'as' | 'oc';
@@ -12,7 +20,12 @@ export interface Landmark {
   city: string;
   year: string;
   continent: Continent;
+  /** Posición en el mundo 3D (x este, z sur). */
   pos: [number, number];
+  lat: number;
+  lon: number;
+  /** Tipo de modelo 3D (ver archetypes.ts) o «custom» para los 18 modelados a mano. */
+  arch: string;
   text: string;
   dish: string;
   fact: string;
@@ -22,7 +35,10 @@ export interface Landmark {
   destination: string;
 }
 
-export const LANDMARKS: Landmark[] = [
+type Classic = Pick<Landmark, 'id' | 'text' | 'dish' | 'fact' | 'hello' | 'season' | 'destination'> & Partial<Landmark>;
+
+/** Textos de los 18 monumentos originales (modelados a mano). */
+const CLASSIC: Classic[] = [
   {
     id: 'liberty', name: 'Estatua de la Libertad', country: 'Estados Unidos', countryCode: 'US', city: 'Nueva York', year: '1886', continent: 'na', pos: [-31, -11],
     text: 'Regalo de Francia a Estados Unidos, diseñada por Frédéric Auguste Bartholdi con estructura interior de Gustave Eiffel. Su antorcha da la bienvenida a quien llega por mar a Nueva York.',
@@ -133,6 +149,22 @@ export const LANDMARKS: Landmark[] = [
   },
 ];
 
+
+type Row = [string, string, string, string, string, string, number, number, string, string, string, string, string, string, string, string];
+const ROWS = [...eu, ...am, ...af, ...asia, ...oc] as Row[];
+
+const POS = layoutWorld(ROWS.map((r) => ({ id: r[0], lat: r[6], lon: r[7] })));
+
+export const LANDMARKS: Landmark[] = ROWS.map((r, i) => {
+  const c = CLASSIC.find((x) => x.id === r[0]);
+  return {
+    id: r[0], name: r[1], country: r[2], countryCode: r[3], city: r[4], year: r[5], lat: r[6], lon: r[7],
+    continent: r[8] as Continent, arch: r[9], pos: POS[i],
+    text: c?.text ?? r[11], dish: c?.dish ?? r[12], fact: c?.fact ?? r[13], hello: c?.hello ?? r[14], season: c?.season ?? r[15],
+    destination: c?.destination ?? r[4],
+  };
+});
+
 export const CONTINENT_NAMES: Record<Continent, string> = {
-  na: 'Norteamérica', sa: 'Sudamérica', eu: 'Europa', af: 'África y Oriente Medio', as: 'Asia', oc: 'Oceanía',
+  na: 'Norte y Centroamérica', sa: 'Sudamérica', eu: 'Europa', af: 'África', as: 'Asia', oc: 'Oceanía',
 };

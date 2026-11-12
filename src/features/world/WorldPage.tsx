@@ -1,13 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, Hand, LocateFixed, Minus, Plus } from 'lucide-react';
+import { ChevronLeft, Hand, LocateFixed, Minus, Plus, Search } from 'lucide-react';
 import { useTrips } from '../../data/queries';
 import { LANDMARKS } from './landmarks';
 import { flag } from '../passport/achievements';
 import { LandmarkSheet } from './LandmarkSheet';
+import { WorldSearch } from './WorldSearch';
 import type { WorldApi } from './scene';
 
-/** Mundo ATLAS: mini-mundo 3D con los monumentos más icónicos de cada país. */
+/** Mundo ATLAS: mini-mundo 3D con un monumento de cada uno de los 195 países. */
 export default function WorldPage() {
   const nav = useNavigate();
   const host = useRef<HTMLDivElement>(null);
@@ -16,6 +17,7 @@ export default function WorldPage() {
   const [selected, setSelected] = useState<string | null>(null);
   const [failed, setFailed] = useState(false);
   const [hint, setHint] = useState(true);
+  const [search, setSearch] = useState(false);
   const trips = useTrips();
   const visited = useMemo(() => {
     const s = new Set<string>();
@@ -85,7 +87,10 @@ export default function WorldPage() {
           <div className="tiny" style={{ fontWeight: 800, letterSpacing: '.14em', color: 'var(--accent)' }}>EXPLORAR</div>
           <div>Mundo <span className="serif grad-text">ATLAS</span></div>
         </div>
-        <span className="pill">{visited.size ? `${[...visited].filter((c) => LANDMARKS.some((l) => l.countryCode === c)).length}/${LANDMARKS.length} visitados` : `${LANDMARKS.length} monumentos`}</span>
+        <button className="pill world-search-btn" onClick={() => setSearch(true)} aria-label="Buscar país o monumento">
+          <Search size={15} aria-hidden="true" />
+          {visited.size ? `${[...visited].filter((c) => LANDMARKS.some((l) => l.countryCode === c)).length}/${LANDMARKS.length}` : `${LANDMARKS.length} países`}
+        </button>
       </div>
 
       <div className="world-ctrls" style={{ display: landmark ? 'none' : undefined }}>
@@ -95,13 +100,23 @@ export default function WorldPage() {
       </div>
 
       {hint && !failed && (
-        <div className="world-hint" role="status"><Hand size={16} /> Arrastra para moverte · pellizca para acercar · toca un monumento</div>
+        <div className="world-hint" role="status"><Hand size={16} /> Arrastra para moverte · pellizca para acercar · toca un monumento o busca un país arriba</div>
       )}
       {failed && (
         <div className="world-fail card">
           Este dispositivo no permite gráficos 3D (WebGL). Puedes ver los monumentos en la lista de Explorar.
         </div>
       )}
+      <WorldSearch
+        open={search}
+        visited={visited}
+        onClose={() => setSearch(false)}
+        onPick={(id) => {
+          setSearch(false);
+          setHint(false);
+          api.current?.flyTo(id);
+        }}
+      />
       {landmark && <LandmarkSheet landmark={landmark} visited={visited.has(landmark.countryCode)} onClose={() => setSelected(null)} />}
     </div>
   );

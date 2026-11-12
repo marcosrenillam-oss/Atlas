@@ -629,3 +629,25 @@ nav.tabs[aria-label='Secciones del viaje']::before { background: color-mix(in sr
 .world-teaser::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to top, rgba(5, 30, 50, 0.72), rgba(5, 30, 50, 0.05) 60%); }
 .wt-body { z-index: 1; max-width: 85%; }
 .map-wrap:has(.map-card) .maplibregl-ctrl-top-right { opacity: 0; pointer-events: none; transition: opacity 0.2s; }
+
+/* Buscador del Mundo ATLAS */
+.world-search-btn { display: inline-flex; align-items: center; gap: 6px; font: inherit; font-weight: 700; cursor: pointer; border: 0; min-height: 40px; padding: 0 14px; color: var(--text); background: color-mix(in srgb, var(--card-solid) 78%, transparent); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur); box-shadow: var(--shadow-1), var(--glass-edge); }
+.world-search-btn svg { color: var(--accent); }
+.ws-search { display: flex; gap: 8px; align-items: center; position: sticky; top: 0; z-index: 1; padding: 2px 0 6px; background: inherit; }
+.ws-input { flex: 1; display: flex; align-items: center; gap: 8px; min-height: 46px; padding: 0 14px; border-radius: 16px; background: var(--card-solid); box-shadow: var(--shadow-1), var(--glass-edge); color: var(--muted); }
+.ws-input input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; font: inherit; font-size: 16px; color: var(--text); }
+.ws-group { margin-top: 10px; }
+.ws-cont { font-size: 12px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); margin: 10px 4px 6px; }
+.ws-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.ws-item { width: 100%; display: flex; align-items: center; gap: 12px; padding: 9px 10px; border: 0; border-radius: 14px; background: transparent; text-align: left; font: inherit; color: var(--text); cursor: pointer; }
+.ws-item:active, .ws-item:hover { background: color-mix(in srgb, var(--card-solid) 80%, transparent); }
+.ws-flag { font-size: 24px; line-height: 1; }
+.ws-text { flex: 1; min-width: 0; display: grid; }
+.ws-country { font-weight: 700; }
+.ws-name { font-size: 13px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ws-vis { color: var(--success, #12a271); }
+.world-label { transition: opacity 0.2s ease, visibility 0s linear 0s; }
+.world-label.off { opacity: 0; visibility: hidden; pointer-events: none; transition: opacity 0.2s ease, visibility 0s linear 0.2s; }
+.ws-input { min-width: 0; }
+.ws-search .btn { flex: none; white-space: nowrap; }
+@media (max-width: 380px) { .ws-search .btn .ws-shuffle-txt { display: none; } }

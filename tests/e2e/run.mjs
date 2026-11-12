@@ -597,6 +597,14 @@ async function createTrip(page, { name, stages, start, end, companions = [], bud
     await pg.locator('.world-canvas canvas').waitFor({ timeout: 30000 });
     await pg.waitForTimeout(2500);
     await shot(pg, '23-mundo');
+    // 195 países: buscador y ficha de un país cualquiera
+    assert.equal(await pg.locator('.world-label').count(), 195);
+    await pg.getByRole('button', { name: 'Buscar país o monumento' }).click();
+    await pg.getByRole('searchbox', { name: 'Buscar país o monumento' }).fill('tuvalu');
+    await pg.getByRole('button', { name: 'Tuvalu Atolón de Funafuti' }).click();
+    await pg.getByRole('heading', { name: 'Atolón de Funafuti' }).waitFor();
+    await pg.getByText('Pulaka').waitFor();
+    await pg.getByRole('button', { name: 'Cerrar' }).evaluate((el) => el.click());
     await pg.getByRole('button', { name: 'Coliseo, Italia' }).evaluate((el) => el.click());
     await pg.getByRole('heading', { name: 'Coliseo' }).waitFor();
     await pg.getByText('Plato típico').waitFor();

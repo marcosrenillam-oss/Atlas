@@ -24,7 +24,7 @@ export function allMaterials() {
   return [...mats.values()];
 }
 
-function add(g: THREE.Object3D, geo: THREE.BufferGeometry, m: THREE.Material, x = 0, y = 0, z = 0) {
+export function add(g: THREE.Object3D, geo: THREE.BufferGeometry, m: THREE.Material, x = 0, y = 0, z = 0) {
   const mesh = new THREE.Mesh(geo, m);
   mesh.position.set(x, y, z);
   mesh.castShadow = true;
@@ -33,22 +33,22 @@ function add(g: THREE.Object3D, geo: THREE.BufferGeometry, m: THREE.Material, x 
   return mesh;
 }
 /** Caja con la base apoyada en y. */
-const box = (g: THREE.Object3D, w: number, h: number, d: number, c: THREE.Material, x = 0, y = 0, z = 0) => add(g, new THREE.BoxGeometry(w, h, d), c, x, y + h / 2, z);
-const cyl = (g: THREE.Object3D, rt: number, rb: number, h: number, seg: number, c: THREE.Material, x = 0, y = 0, z = 0) => add(g, new THREE.CylinderGeometry(rt, rb, h, seg), c, x, y + h / 2, z);
-const cone = (g: THREE.Object3D, r: number, h: number, seg: number, c: THREE.Material, x = 0, y = 0, z = 0) => add(g, new THREE.ConeGeometry(r, h, seg), c, x, y + h / 2, z);
-const ball = (g: THREE.Object3D, r: number, c: THREE.Material, x = 0, y = 0, z = 0, sy = 1, seg = 10) => {
+export const box = (g: THREE.Object3D, w: number, h: number, d: number, c: THREE.Material, x = 0, y = 0, z = 0) => add(g, new THREE.BoxGeometry(w, h, d), c, x, y + h / 2, z);
+export const cyl = (g: THREE.Object3D, rt: number, rb: number, h: number, seg: number, c: THREE.Material, x = 0, y = 0, z = 0) => add(g, new THREE.CylinderGeometry(rt, rb, h, seg), c, x, y + h / 2, z);
+export const cone = (g: THREE.Object3D, r: number, h: number, seg: number, c: THREE.Material, x = 0, y = 0, z = 0) => add(g, new THREE.ConeGeometry(r, h, seg), c, x, y + h / 2, z);
+export const ball = (g: THREE.Object3D, r: number, c: THREE.Material, x = 0, y = 0, z = 0, sy = 1, seg = 10) => {
   const m = add(g, new THREE.SphereGeometry(r, seg, Math.max(6, seg - 2)), c, x, y, z);
   m.scale.y = sy;
   return m;
 };
 /** Pirámide de base cuadrada alineada con los ejes. */
-const pyramid = (g: THREE.Object3D, r: number, h: number, c: THREE.Material, x = 0, y = 0, z = 0) => {
+export const pyramid = (g: THREE.Object3D, r: number, h: number, c: THREE.Material, x = 0, y = 0, z = 0) => {
   const m = cone(g, r, h, 4, c, x, y, z);
   m.rotation.y = Math.PI / 4;
   return m;
 };
 /** Prisma triangular (frontón) de anchura w a lo largo de x. */
-const pediment = (g: THREE.Object3D, w: number, h: number, d: number, c: THREE.Material, x = 0, y = 0, z = 0) => {
+export const pediment = (g: THREE.Object3D, w: number, h: number, d: number, c: THREE.Material, x = 0, y = 0, z = 0) => {
   const shape = new THREE.Shape();
   shape.moveTo(-d / 2, 0);
   shape.lineTo(d / 2, 0);
@@ -61,13 +61,13 @@ const pediment = (g: THREE.Object3D, w: number, h: number, d: number, c: THREE.M
   return m;
 };
 /** Cúpula bulbosa (cebolla) con remate. */
-const onion = (g: THREE.Object3D, r: number, c: THREE.Material, x: number, y: number, z: number, tip?: THREE.Material) => {
+export const onion = (g: THREE.Object3D, r: number, c: THREE.Material, x: number, y: number, z: number, tip?: THREE.Material) => {
   ball(g, r, c, x, y + r * 0.9, z, 1.25, 8);
   cone(g, r * 0.45, r * 1.1, 8, c, x, y + r * 1.8, z);
   if (tip) ball(g, r * 0.12, tip, x, y + r * 3.0, z, 1, 6);
 };
 
-const GOLD = () => mat('#e8b54a', { metal: 0.5, rough: 0.4 });
+export const GOLD = () => mat('#e8b54a', { metal: 0.5, rough: 0.4 });
 
 // ───────────────────────────── Monumentos ─────────────────────────────
 

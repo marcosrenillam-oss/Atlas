@@ -13,14 +13,12 @@ ES = {
   'belem': 'Torre_de_Belém', 'coliseo': 'Coliseo', 'piramides': 'Pirámide_de_Keops', 'burj': 'Burj_Khalifa',
   'muralla': 'Gran_Muralla_China', 'torii': 'Itsukushima-jinja', 'opera': 'Ópera_de_Sídney',
 }
-LANDMARKS = {
-  'liberty': ('Statue_of_Liberty', None), 'chichen': ('Chichen_Itza', None), 'machu': ('Machu_Picchu', None),
-  'cristo': ('Christ_the_Redeemer_(statue)', None), 'bigben': ('Big_Ben', None), 'eiffel': ('Eiffel_Tower', None),
-  'sagrada': ('Sagrada_Família', None), 'belem': ('Belém_Tower', None), 'coliseo': ('Colosseum', 'Colosseo_2020.jpg'),
-  'brandenburgo': ('Brandenburg_Gate', None), 'partenon': ('Parthenon', None), 'basilio': ("Saint_Basil's_Cathedral", None),
-  'piramides': ('Giza_pyramid_complex', None), 'burj': ('Burj_Khalifa', None), 'taj': ('Taj_Mahal', None),
-  'muralla': ('Great_Wall_of_China', None), 'torii': ('Itsukushima_Shrine', None), 'opera': ('Sydney_Opera_House', None),
-}
+FORCED = {'coliseo': 'Colosseo_2020.jpg'}
+# id -> (artículo de Wikipedia en inglés, archivo concreto opcional), leído de los datos del mundo.
+LANDMARKS = {}
+for region in ('eu', 'am', 'af', 'as', 'oc'):
+    for row in json.load(open(f'src/features/world/data/{region}.json')):
+        LANDMARKS[row[0]] = (row[10].replace(' ', '_'), FORCED.get(row[0]))
 only = set(sys.argv[1:])
 
 def get(url, tries=6):

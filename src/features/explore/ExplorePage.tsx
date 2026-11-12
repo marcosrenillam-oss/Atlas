@@ -57,7 +57,7 @@ export function ExplorePage() {
         <div className="wt-body">
           <div className="tiny" style={{ fontWeight: 800, letterSpacing: '.14em', opacity: 0.85 }}>NUEVO · 3D</div>
           <div className="wt-title">Mundo <span className="serif">ATLAS</span></div>
-          <div className="small" style={{ opacity: 0.9 }}>Recorre un mini-mundo con los monumentos más icónicos de cada país</div>
+          <div className="small" style={{ opacity: 0.9 }}>Los 195 países del mundo en un mini-mundo 3D: su monumento, su plato y cómo saludar</div>
         </div>
       </Link>
 

@@ -46,7 +46,7 @@ export default defineConfig({
             // Fotos de monumentos del Mundo ATLAS: se guardan al verlas por primera vez.
             urlPattern: ({ url }: { url: URL }) => url.pathname.includes('/world/') && url.pathname.endsWith('.jpg'),
             handler: 'CacheFirst',
-            options: { cacheName: 'atlas-world-photos', expiration: { maxEntries: 40 } },
+            options: { cacheName: 'atlas-world-photos', expiration: { maxEntries: 220 } },
           },
         ],
       },

@@ -1,6 +1,8 @@
 import * as THREE from 'three';
 import { MapControls } from 'three/addons/controls/MapControls.js';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { BUILDERS, allMaterials, mat } from './monuments';
+import { ARCHETYPES } from './archetypes';
 import { LANDMARKS, type Continent, type Landmark } from './landmarks';
 
 /**
@@ -39,8 +41,18 @@ function segDist(px: number, pz: number, ax: number, az: number, bx: number, bz:
   return Math.hypot(px - (ax + dx * t), pz - (az + dz * t));
 }
 
-const HOT: Continent[] = ['af'];
-const TROPIC: Continent[] = ['sa', 'oc', 'af'];
+/** Bioma según la geografía real del monumento más cercano. */
+const isDesert = (l: Landmark) => (l.lat > 12 && l.lat < 38 && l.lon > -18 && l.lon < 62) || (l.lat > 36 && l.lat < 46 && l.lon > 52 && l.lon < 72) || (l.lat < -18 && l.lat > -30 && l.lon > 12 && l.lon < 26);
+const isTropic = (l: Landmark) => Math.abs(l.lat) < 23.5;
+const isCold = (l: Landmark) => l.lat > 58;
+
+/** Límites del mundo (con margen) a partir de las posiciones. */
+const BOUNDS = (() => {
+  const xs = LANDMARKS.map((l) => l.pos[0]), zs = LANDMARKS.map((l) => l.pos[1]);
+  return { minX: Math.min(...xs) - 6, maxX: Math.max(...xs) + 6, minZ: Math.min(...zs) - 6, maxZ: Math.max(...zs) + 6 };
+})();
+const CX = (BOUNDS.minX + BOUNDS.maxX) / 2, CZ = (BOUNDS.minZ + BOUNDS.maxZ) / 2;
+const SEA_W = BOUNDS.maxX - BOUNDS.minX + 140, SEA_D = BOUNDS.maxZ - BOUNDS.minZ + 120;
 
 export function createWorld(container: HTMLElement, opts: { dark: boolean; onSelect: (id: string | null) => void; visited: Set<string> }): WorldApi {
   const W = () => container.clientWidth;
@@ -57,8 +69,10 @@ export function createWorld(container: HTMLElement, opts: { dark: boolean; onSel
   container.appendChild(renderer.domElement);
 
   const scene = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera(32, W() / H(), 1, 500);
-  const HOME = { target: new THREE.Vector3(-1, 0, -1), pos: new THREE.Vector3(-1, 62, 58) };
+  const camera = new THREE.PerspectiveCamera(32, W() / H(), 1, 900);
+  // Vista inicial: Europa y el Mediterráneo.
+  const es = LANDMARKS.find((l) => l.countryCode === 'IT')!.pos;
+  const HOME = { target: new THREE.Vector3(es[0], 0, es[1] + 4), pos: new THREE.Vector3(es[0], 72, es[1] + 70) };
   camera.position.copy(HOME.pos);
 
   const controls = new MapControls(camera, renderer.domElement);
@@ -67,7 +81,7 @@ export function createWorld(container: HTMLElement, opts: { dark: boolean; onSel
   controls.dampingFactor = 0.08;
   controls.screenSpacePanning = false;
   controls.minDistance = 10;
-  controls.maxDistance = 110;
+  controls.maxDistance = 190;
   controls.minPolarAngle = 0.35;
   controls.maxPolarAngle = 1.2;
   controls.zoomToCursor = true;
@@ -81,7 +95,9 @@ export function createWorld(container: HTMLElement, opts: { dark: boolean; onSel
   sun.position.set(-30, 55, 30);
   sun.castShadow = true;
   sun.shadow.mapSize.set(2048, 2048);
-  Object.assign(sun.shadow.camera, { left: -48, right: 48, top: 32, bottom: -32, near: 10, far: 160 });
+  Object.assign(sun.shadow.camera, { left: -42, right: 42, top: 42, bottom: -42, near: 10, far: 180 });
+  const SUN_OFFSET = new THREE.Vector3(-30, 55, 30);
+  scene.add(sun.target);
   sun.shadow.bias = -0.0008;
   sun.shadow.normalBias = 0.02;
   scene.add(sun);
@@ -96,46 +112,58 @@ export function createWorld(container: HTMLElement, opts: { dark: boolean; onSel
       .replace('#include <begin_vertex>', `#include <begin_vertex>
         transformed.z += sin(position.x * 0.45 + uTime * 1.1) * 0.09 + cos(position.y * 0.5 + uTime * 0.8) * 0.08;`);
   };
-  const water = new THREE.Mesh(new THREE.PlaneGeometry(170, 120, 110, 80), waterMat);
+  const water = new THREE.Mesh(new THREE.PlaneGeometry(SEA_W, SEA_D, Math.round(SEA_W / 1.6), Math.round(SEA_D / 1.6)), waterMat);
   water.rotation.x = -Math.PI / 2;
-  water.position.y = WATER_Y;
+  water.position.set(CX, WATER_Y, CZ);
   water.receiveShadow = true;
   scene.add(water);
   // fondo marino (más oscuro) para dar profundidad
-  const seabed = new THREE.Mesh(new THREE.PlaneGeometry(170, 120), new THREE.MeshStandardMaterial({ color: '#2f8fa8' }));
+  const seabed = new THREE.Mesh(new THREE.PlaneGeometry(SEA_W, SEA_D), new THREE.MeshStandardMaterial({ color: '#2f8fa8' }));
   seabed.rotation.x = -Math.PI / 2;
-  seabed.position.y = -1.6;
+  seabed.position.set(CX, -1.6, CZ);
   scene.add(seabed);
 
   // ── Islas de hexágonos ──
   const byCont = new Map<Continent, Landmark[]>();
   for (const l of LANDMARKS) byCont.set(l.continent, [...(byCont.get(l.continent) ?? []), l]);
   const links: [Landmark, Landmark][] = [];
+  // Árbol de distancia mínima (Prim) por continente: une cada país con su vecino más cercano.
+  // Las uniones muy largas no se hacen, así las islas lejanas (Pacífico, Caribe) quedan sueltas.
   for (const list of byCont.values()) {
-    for (let i = 1; i < list.length; i++) {
-      // conecta cada monumento con el más cercano ya incluido (árbol)
-      let best = list[0], bd = Infinity;
-      for (let j = 0; j < i; j++) {
+    const maxLink = list[0].continent === 'oc' ? 11 : 16;
+    const inTree = new Set([0]);
+    while (inTree.size < list.length) {
+      let bi = -1, bj = -1, bd = Infinity;
+      for (const i of inTree) for (let j = 0; j < list.length; j++) {
+        if (inTree.has(j)) continue;
         const d = Math.hypot(list[i].pos[0] - list[j].pos[0], list[i].pos[1] - list[j].pos[1]);
-        if (d < bd) [bd, best] = [d, list[j]];
+        if (d < bd) [bd, bi, bj] = [d, i, j];
       }
-      links.push([list[i], best]);
+      inTree.add(bj);
+      if (bd < maxLink) links.push([list[bi], list[bj]]);
     }
   }
-  type Tile = { x: number; z: number; q: number; r: number; top: number; kind: 'grass' | 'sand' | 'plaza' | 'desert'; cont: Continent; near: number; lm: Landmark };
+  type Tile = { x: number; z: number; q: number; r: number; top: number; kind: 'grass' | 'sand' | 'plaza' | 'desert' | 'snow'; cont: Continent; near: number; lm: Landmark };
   const tiles = new Map<string, Tile>();
   const key = (q: number, r: number) => `${q},${r}`;
-  for (let r = -20; r <= 20; r++) {
-    for (let q = -40; q <= 40; q++) {
+  const rMin = Math.floor(BOUNDS.minZ / 1.5), rMax = Math.ceil(BOUNDS.maxZ / 1.5);
+  for (let r = rMin; r <= rMax; r++) {
+    const qMin = Math.floor(BOUNDS.minX / SQ3 - r / 2), qMax = Math.ceil(BOUNDS.maxX / SQ3 - r / 2);
+    for (let q = qMin; q <= qMax; q++) {
       const x = HEX_R * SQ3 * (q + r / 2), z = HEX_R * 1.5 * r;
-      if (Math.abs(x) > 44 || Math.abs(z) > 27) continue;
       let near = Infinity, lm = LANDMARKS[0];
       for (const l of LANDMARKS) {
-        const d = Math.hypot(x - l.pos[0], z - l.pos[1]);
+        const dx = x - l.pos[0], dz = z - l.pos[1];
+        if (Math.abs(dx) > 12 || Math.abs(dz) > 12) continue;
+        const d = Math.hypot(dx, dz);
         if (d < near) [near, lm] = [d, l];
       }
+      if (near > 12) continue;
       let link = Infinity;
-      for (const [a, b] of links) link = Math.min(link, segDist(x, z, a.pos[0], a.pos[1], b.pos[0], b.pos[1]));
+      for (const [a, b] of links) {
+        if (Math.min(a.pos[0], b.pos[0]) - 4 > x || Math.max(a.pos[0], b.pos[0]) + 4 < x) continue;
+        link = Math.min(link, segDist(x, z, a.pos[0], a.pos[1], b.pos[0], b.pos[1]));
+      }
       const n = noise(x * 0.18, z * 0.18) - 0.5;
       const land = Math.min(near - 4.4, link - 2.7) + n * 2.2 < 0;
       if (!land) continue;
@@ -146,8 +174,9 @@ export function createWorld(container: HTMLElement, opts: { dark: boolean; onSel
   for (const t of tiles.values()) {
     const coast = NB.some(([dq, dr]) => !tiles.has(key(t.q + dq, t.r + dr)));
     if (t.near < 2.3) t.kind = 'plaza';
-    else if (coast) t.kind = 'sand';
-    else if (HOT.includes(t.cont)) t.kind = 'desert';
+    else if (coast) t.kind = isCold(t.lm) ? 'snow' : 'sand';
+    else if (isDesert(t.lm)) t.kind = 'desert';
+    else if (isCold(t.lm) && hash(t.q, t.r) < 0.6) t.kind = 'snow';
     t.top = t.kind === 'sand' ? 0.34 : t.kind === 'plaza' ? 0.56 : 0.5 + hash(t.q, t.r) * 0.16;
   }
   const tileGeo = new THREE.CylinderGeometry(HEX_R * 0.985, HEX_R, 1, 6);
@@ -161,6 +190,7 @@ export function createWorld(container: HTMLElement, opts: { dark: boolean; onSel
     sand: ['#efdcab', '#ead39c'],
     plaza: ['#ece5d6', '#e3dbc9'],
     desert: ['#ecd197', '#e4c584', '#f0d9a6'],
+    snow: ['#eef4f6', '#e4edf0'],
   };
   let ti = 0;
   for (const t of tiles.values()) {
@@ -184,14 +214,14 @@ export function createWorld(container: HTMLElement, opts: { dark: boolean; onSel
   for (const t of tiles.values()) {
     if (t.kind === 'plaza') continue;
     const r1 = hash(t.q * 11, t.r * 5), r2 = hash(t.q * 7, t.r * 13);
-    if (t.kind !== 'sand' && t.near < 4.2 && r1 < 0.7) {
+    if (t.kind !== 'sand' && t.near < 3.8 && r1 < 0.55) {
       const n = r2 < 0.35 ? 2 : 1;
       for (let k = 0; k < n; k++) {
         const ox = n === 2 ? (k ? 0.35 : -0.35) : 0;
         houses.push({ x: t.x + ox, z: t.z + (k ? 0.25 : -0.15), y: t.top, s: 0.45 + hash(t.q + k, t.r) * 0.35, rot: Math.floor(r2 * 6) * (Math.PI / 3), wall: WALLS[Math.floor(r1 * 97) % WALLS.length], roof: ROOFS[Math.floor(r2 * 89) % ROOFS.length] });
       }
-    } else if (t.kind === 'sand' ? r1 < 0.18 && TROPIC.includes(t.cont) : r1 < (t.kind === 'desert' ? 0.12 : 0.55)) {
-      trees.push({ x: t.x + (r2 - 0.5) * 0.6, z: t.z + (r1 - 0.5) * 0.6, y: t.top, s: 0.7 + r2 * 0.6, palm: TROPIC.includes(t.cont) && (t.kind !== 'grass' || r2 < 0.4) });
+    } else if (t.kind === 'sand' ? r1 < 0.18 && isTropic(t.lm) : r1 < (t.kind === 'desert' ? 0.1 : t.kind === 'snow' ? 0.35 : 0.5)) {
+      trees.push({ x: t.x + (r2 - 0.5) * 0.6, z: t.z + (r1 - 0.5) * 0.6, y: t.top, s: 0.7 + r2 * 0.6, palm: isTropic(t.lm) && (t.kind !== 'grass' || r2 < 0.4) });
     }
   }
   const wallMesh = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshStandardMaterial({ flatShading: true, roughness: 0.85 }), houses.length);
@@ -252,26 +282,95 @@ export function createWorld(container: HTMLElement, opts: { dark: boolean; onSel
   }
 
   // ── Monumentos ──
+  // Se construyen por separado (para medirlos y tocarlos) y luego se fusionan por material:
+  // así 195 monumentos cuestan unas pocas decenas de llamadas de dibujo.
   const hitboxes: THREE.Mesh[] = [];
-  const monuments = new Map<string, THREE.Group>();
+  const grounds = new Map<string, number>();
   const anchors = new Map<string, THREE.Vector3>();
+  const buckets = new Map<string, { m: THREE.Material; geos: THREE.BufferGeometry[] }>();
+  const shared = new Map<string, THREE.MeshStandardMaterial>();
+  const sharedMat = (rough: number, metal: number) => {
+    const k = `${rough}|${metal}`;
+    let m = shared.get(k);
+    if (!m) shared.set(k, (m = new THREE.MeshStandardMaterial({ vertexColors: true, flatShading: true, roughness: rough, metalness: metal })));
+    return m;
+  };
+  /** Fusiona las piezas de un grupo pequeño (barco, avión) en una sola malla con colores por vértice. */
+  const bake = (g: THREE.Group, single?: THREE.Material) => {
+    g.updateMatrixWorld(true);
+    const geos: THREE.BufferGeometry[] = [];
+    let rough = 0.85, metal = 0;
+    g.traverse((o) => {
+      const mesh = o as THREE.Mesh;
+      if (!mesh.isMesh) return;
+      let geo = mesh.geometry.clone().applyMatrix4(mesh.matrixWorld);
+      if (geo.index) geo = geo.toNonIndexed();
+      for (const k of Object.keys(geo.attributes)) if (k !== 'position' && k !== 'normal') geo.deleteAttribute(k);
+      const m = mesh.material as THREE.MeshStandardMaterial;
+      [rough, metal] = [m.roughness, m.metalness];
+      if (!single) {
+        const n = geo.attributes.position.count, cols = new Float32Array(n * 3);
+        for (let i = 0; i < n; i++) cols.set([m.color.r, m.color.g, m.color.b], i * 3);
+        geo.setAttribute('color', new THREE.BufferAttribute(cols, 3));
+      }
+      geos.push(geo);
+    });
+    const out = new THREE.Mesh(mergeGeometries(geos)!, single ?? sharedMat(rough, metal));
+    out.castShadow = true;
+    out.receiveShadow = true;
+    return out;
+  };
+  const tileList = [...tiles.values()];
   for (const l of LANDMARKS) {
-    const g = BUILDERS[l.id]?.();
+    const g = l.arch === 'custom' ? BUILDERS[l.id]?.() : ARCHETYPES[l.arch]?.(l.id);
     if (!g) continue;
-    const ground = Math.max(...[...tiles.values()].filter((t) => Math.hypot(t.x - l.pos[0], t.z - l.pos[1]) < 1.2).map((t) => t.top), 0.56);
+    const ground = Math.max(...tileList.filter((t) => Math.abs(t.x - l.pos[0]) < 1.3 && Math.abs(t.z - l.pos[1]) < 1.3).map((t) => t.top), 0.56);
     g.position.set(l.pos[0], ground, l.pos[1]);
     g.rotation.y = -0.35;
-    g.userData.id = l.id;
-    scene.add(g);
-    monuments.set(l.id, g);
+    g.updateMatrixWorld(true);
+    grounds.set(l.id, ground);
     const bb = new THREE.Box3().setFromObject(g);
     const size = bb.getSize(new THREE.Vector3());
     const hit = new THREE.Mesh(new THREE.BoxGeometry(size.x + 0.6, size.y + 0.4, size.z + 0.6), new THREE.MeshBasicMaterial({ visible: false }));
     hit.position.copy(bb.getCenter(new THREE.Vector3()));
     hit.userData.id = l.id;
-    scene.add(hit);
+    hit.updateMatrixWorld();
     hitboxes.push(hit);
     anchors.set(l.id, new THREE.Vector3(l.pos[0], bb.max.y + 0.5, l.pos[1]));
+    g.traverse((o) => {
+      const mesh = o as THREE.Mesh;
+      if (!mesh.isMesh) return;
+      let geo = mesh.geometry.clone().applyMatrix4(mesh.matrixWorld);
+      if (geo.index) geo = geo.toNonIndexed();
+      for (const k of Object.keys(geo.attributes)) if (k !== 'position' && k !== 'normal') geo.deleteAttribute(k);
+      if (!geo.attributes.normal) geo.computeVertexNormals();
+      // Colores por vértice: todas las piezas con el mismo acabado (rugosidad/metal) van juntas.
+      // Las que brillan de noche conservan su material para poder encenderlas.
+      const m = mesh.material as THREE.MeshStandardMaterial;
+      const glow = !!m.userData.glow;
+      const key = glow ? `${l.continent}|${m.uuid}` : `${l.continent}|${m.roughness.toFixed(2)}|${m.metalness.toFixed(2)}`;
+      if (!glow) {
+        const n = geo.attributes.position.count, cols = new Float32Array(n * 3);
+        for (let i = 0; i < n; i++) cols.set([m.color.r, m.color.g, m.color.b], i * 3);
+        geo.setAttribute('color', new THREE.BufferAttribute(cols, 3));
+      }
+      let b = buckets.get(key);
+      if (!b) {
+        b = { m: glow ? m : sharedMat(m.roughness, m.metalness), geos: [] };
+        buckets.set(key, b);
+      }
+      b.geos.push(geo);
+      mesh.geometry.dispose();
+    });
+  }
+  for (const { m, geos } of buckets.values()) {
+    const merged = mergeGeometries(geos);
+    geos.forEach((x) => x.dispose());
+    if (!merged) continue;
+    const mesh = new THREE.Mesh(merged, m);
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
+    scene.add(mesh);
   }
 
   // anillo de selección
@@ -282,7 +381,16 @@ export function createWorld(container: HTMLElement, opts: { dark: boolean; onSel
 
   // ── Barcos ──
   const boats: { g: THREE.Group; cx: number; cz: number; rx: number; rz: number; speed: number; phase: number }[] = [];
-  const BOAT_ROUTES: [number, number, number, number][] = [[-18, -8, 7, 4], [8, 13, 9, 3.5], [14, -14, 5, 3], [-8, 5, 6, 3], [20, 13, 4, 3], [-34, 3, 4, 7], [28, 6, 4, 5]];
+  // Rutas de barco en el mar, cerca de la costa.
+  const BOAT_ROUTES: [number, number, number, number][] = [];
+  for (let i = 0; i < 400 && BOAT_ROUTES.length < 22; i++) {
+    const x = BOUNDS.minX + hash(i, 71) * (BOUNDS.maxX - BOUNDS.minX), z = BOUNDS.minZ + hash(71, i) * (BOUNDS.maxZ - BOUNDS.minZ);
+    let land = Infinity;
+    for (const t of tileList) if (Math.abs(t.x - x) < 8 && Math.abs(t.z - z) < 8) land = Math.min(land, Math.hypot(t.x - x, t.z - z));
+    if (land < 4.5 || land > 8) continue;
+    const r = Math.min(land - 2, 4);
+    BOAT_ROUTES.push([x, z, r, r * 0.7]);
+  }
   for (const [cx, cz, rx, rz] of BOAT_ROUTES) {
     const g = new THREE.Group();
     const hull = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.22, 0.34), mat('#f6f2ea'));
@@ -293,16 +401,19 @@ export function createWorld(container: HTMLElement, opts: { dark: boolean; onSel
     sail.position.set(0.05, 0.6, 0);
     sail.scale.z = 0.25;
     g.add(hull, stripe, sail);
-    g.traverse((o) => ((o as THREE.Mesh).castShadow = true));
+    const baked = bake(g);
+    g.clear();
+    g.add(baked);
     scene.add(g);
     boats.push({ g, cx, cz, rx, rz, speed: 0.05 + hash(cx, cz) * 0.05, phase: hash(cz, cx) * 6 });
   }
 
   // ── Aviones entre continentes ──
   const planes: { g: THREE.Group; a: THREE.Vector3; b: THREE.Vector3; t: number; speed: number; trail: THREE.Mesh }[] = [];
-  const ROUTES: [string, string][] = [['eiffel', 'liberty'], ['taj', 'opera'], ['cristo', 'piramides'], ['muralla', 'basilio']];
+  const ROUTES: [string, string][] = [['eiffel', 'liberty'], ['taj', 'opera'], ['cristo', 'piramides'], ['muralla', 'basilio'], ['sagrada', 'cartagena'], ['burj', 'petronas'], ['kilimanjaro', 'tablemountain'], ['torii', 'milford'], ['obelisco', 'machu'], ['cntower', 'bigben']];
   for (const [from, to] of ROUTES) {
-    const A = LANDMARKS.find((l) => l.id === from)!, B = LANDMARKS.find((l) => l.id === to)!;
+    const A = LANDMARKS.find((l) => l.id === from), B = LANDMARKS.find((l) => l.id === to);
+    if (!A || !B) continue;
     const g = new THREE.Group();
     const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.12, 0.8, 3, 6), mat('#ffffff', { rough: 0.4 }));
     body.rotation.z = Math.PI / 2;
@@ -312,7 +423,9 @@ export function createWorld(container: HTMLElement, opts: { dark: boolean; onSel
     const stab = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.02, 0.45), mat('#e8eef5'));
     stab.position.set(-0.45, 0.05, 0);
     g.add(body, wing, tail, stab);
-    g.traverse((o) => ((o as THREE.Mesh).castShadow = true));
+    const bakedPlane = bake(g);
+    g.clear();
+    g.add(bakedPlane);
     scene.add(g);
     const trail = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.03, 0.03), new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.55 }));
     scene.add(trail);
@@ -322,7 +435,7 @@ export function createWorld(container: HTMLElement, opts: { dark: boolean; onSel
   // ── Nubes ──
   const clouds: THREE.Group[] = [];
   const cloudMat = new THREE.MeshStandardMaterial({ color: '#ffffff', flatShading: true, roughness: 1, transparent: true, opacity: 0.78, depthWrite: false });
-  for (let i = 0; i < 7; i++) {
+  for (let i = 0; i < 18; i++) {
     const g = new THREE.Group();
     const n = 3 + Math.floor(hash(i, 1) * 3);
     for (let k = 0; k < n; k++) {
@@ -331,7 +444,11 @@ export function createWorld(container: HTMLElement, opts: { dark: boolean; onSel
       m.castShadow = true;
       g.add(m);
     }
-    g.position.set(-45 + hash(i, 9) * 90, 20 + hash(i, 4) * 6, -26 + hash(9, i) * 52);
+    const puff = bake(g, cloudMat);
+    puff.receiveShadow = false;
+    g.clear();
+    g.add(puff);
+    g.position.set(BOUNDS.minX + hash(i, 9) * (BOUNDS.maxX - BOUNDS.minX), 20 + hash(i, 4) * 6, BOUNDS.minZ + hash(9, i) * (BOUNDS.maxZ - BOUNDS.minZ));
     g.userData.speed = 0.35 + hash(i, 5) * 0.45;
     scene.add(g);
     clouds.push(g);
@@ -342,7 +459,7 @@ export function createWorld(container: HTMLElement, opts: { dark: boolean; onSel
   const sp: number[] = [];
   for (let i = 0; i < 500; i++) {
     const th = hash(i, 1) * Math.PI * 2, ph = hash(i, 2) * Math.PI * 0.45;
-    sp.push(Math.cos(th) * Math.sin(ph) * 220, Math.cos(ph) * 220, Math.sin(th) * Math.sin(ph) * 220);
+    sp.push(CX + Math.cos(th) * Math.sin(ph) * 420, Math.cos(ph) * 420, CZ + Math.sin(th) * Math.sin(ph) * 420);
   }
   starGeo.setAttribute('position', new THREE.Float32BufferAttribute(sp, 3));
   const stars = new THREE.Points(starGeo, new THREE.PointsMaterial({ color: '#ffffff', size: 1.2, sizeAttenuation: false, transparent: true, opacity: 0.85 }));
@@ -352,7 +469,7 @@ export function createWorld(container: HTMLElement, opts: { dark: boolean; onSel
   function setTheme(dark: boolean) {
     const sky = new THREE.Color(dark ? '#0a1a2e' : '#cdebf0');
     scene.background = sky;
-    scene.fog = new THREE.Fog(sky, 110, 230);
+    scene.fog = new THREE.Fog(sky, 170, 380);
     hemi.color.set(dark ? '#7f9cc9' : '#fdf8ee');
     hemi.groundColor.set(dark ? '#0b2236' : '#9cc7c9');
     hemi.intensity = dark ? 0.8 : 1.25;
@@ -367,23 +484,45 @@ export function createWorld(container: HTMLElement, opts: { dark: boolean; onSel
   }
   setTheme(opts.dark);
 
-  // ── Etiquetas HTML proyectadas ──
+  // ── Etiquetas HTML proyectadas (sin amontonarse: las cercanas tienen prioridad) ──
   let labels = new Map<string, HTMLElement>();
+  let selectedId: string | null = null;
   const v = new THREE.Vector3();
+  const shown = new Map<string, boolean>();
+  const nameLen = new Map(LANDMARKS.map((l) => [l.id, l.name.length]));
   function updateLabels() {
     const w = W(), h = H();
     const dist = camera.position.distanceTo(controls.target);
-    const scale = THREE.MathUtils.clamp(48 / dist, 0.75, 1.15);
-    const compact = dist > 52;
+    const scale = THREE.MathUtils.clamp(55 / dist, 0.72, 1.12);
+    const compact = dist > 62;
+    const items: { id: string; el: HTMLElement; x: number; y: number; d: number }[] = [];
     for (const [id, el] of labels) {
       const a = anchors.get(id);
       if (!a) continue;
       v.copy(a).project(camera);
-      const visible = v.z < 1 && Math.abs(v.x) < 1.15 && Math.abs(v.y) < 1.15;
-      el.style.opacity = visible ? '1' : '0';
-      el.classList.toggle('compact', compact && !el.classList.contains('on'));
-      el.style.pointerEvents = visible ? 'auto' : 'none';
-      el.style.transform = `translate(${((v.x + 1) / 2) * w}px, ${((1 - v.y) / 2) * h}px) translate(-50%, -100%) scale(${scale})`;
+      if (v.z < 1 && Math.abs(v.x) < 1.1 && Math.abs(v.y) < 1.1) items.push({ id, el, x: ((v.x + 1) / 2) * w, y: ((1 - v.y) / 2) * h, d: id === selectedId ? -1 : camera.position.distanceToSquared(a) });
+      else if (shown.get(id) !== false) {
+        el.classList.add('off');
+        shown.set(id, false);
+      }
+    }
+    items.sort((a, b) => a.d - b.d);
+    // Zonas ocupadas por la barra superior y la de pestañas: ahí no se ponen etiquetas.
+    const placed: [number, number, number, number][] = [[0, -999, w, 72], [0, h - 104, w, h + 999]];
+    for (const it of items) {
+      const small = compact && it.id !== selectedId;
+      const lw = (small ? 34 : 46 + (nameLen.get(it.id) ?? 10) * 7.3) * scale, lh = 30 * scale;
+      const r: [number, number, number, number] = [it.x - lw / 2 - 2, it.y - lh - 2, it.x + lw / 2 + 2, it.y + 2];
+      const free = it.id === selectedId || !placed.some((p) => r[0] < p[2] && r[2] > p[0] && r[1] < p[3] && r[3] > p[1]);
+      if (free) {
+        placed.push(r);
+        it.el.style.transform = `translate(${it.x}px, ${it.y}px) translate(-50%, -100%) scale(${scale})`;
+        it.el.classList.toggle('compact', small);
+      }
+      if (shown.get(it.id) !== free) {
+        it.el.classList.toggle('off', !free);
+        shown.set(it.id, free);
+      }
     }
   }
 
@@ -405,6 +544,7 @@ export function createWorld(container: HTMLElement, opts: { dark: boolean; onSel
     if (hit) flyTo(hit.object.userData.id as string);
     else {
       ring.visible = false;
+      selectedId = null;
       opts.onSelect(null);
     }
   };
@@ -418,14 +558,15 @@ export function createWorld(container: HTMLElement, opts: { dark: boolean; onSel
   }
   function flyTo(id: string) {
     const l = LANDMARKS.find((x) => x.id === id);
-    const g = monuments.get(id);
-    if (!l || !g) return;
+    const gy = grounds.get(id);
+    if (!l || gy === undefined) return;
+    selectedId = id;
     const target = new THREE.Vector3(l.pos[0], 2.2, l.pos[1] + 1.2);
     const dir = camera.position.clone().sub(controls.target).normalize();
     const pos = target.clone().add(dir.multiplyScalar(21));
     if (pos.y < 9) pos.y = 9;
     animateTo(target, pos);
-    ring.position.set(l.pos[0], g.position.y + 0.06, l.pos[1]);
+    ring.position.set(l.pos[0], gy + 0.06, l.pos[1]);
     ring.visible = true;
     opts.onSelect(id);
   }
@@ -436,6 +577,7 @@ export function createWorld(container: HTMLElement, opts: { dark: boolean; onSel
   }
   function recenter() {
     ring.visible = false;
+    selectedId = null;
     opts.onSelect(null);
     animateTo(HOME.target.clone(), HOME.pos.clone(), 1000);
   }
@@ -443,7 +585,7 @@ export function createWorld(container: HTMLElement, opts: { dark: boolean; onSel
   // Límites del mundo para no perderse al arrastrar.
   controls.addEventListener('change', () => {
     const t = controls.target;
-    const cx = THREE.MathUtils.clamp(t.x, -40, 40), cz = THREE.MathUtils.clamp(t.z, -24, 24);
+    const cx = THREE.MathUtils.clamp(t.x, BOUNDS.minX, BOUNDS.maxX), cz = THREE.MathUtils.clamp(t.z, BOUNDS.minZ, BOUNDS.maxZ);
     if (cx !== t.x || cz !== t.z) {
       camera.position.x += cx - t.x;
       camera.position.z += cz - t.z;
@@ -470,6 +612,9 @@ export function createWorld(container: HTMLElement, opts: { dark: boolean; onSel
       if (k >= 1) tween = null;
     }
     controls.update();
+    // La sombra sigue a la cámara (un mapa de sombras para todo el mundo sería enorme).
+    sun.position.copy(controls.target).add(SUN_OFFSET);
+    sun.target.position.copy(controls.target);
     for (const b of boats) {
       const a = b.phase + t * b.speed;
       b.g.position.set(b.cx + Math.cos(a) * b.rx, WATER_Y + Math.sin(t * 2 + b.phase) * 0.04, b.cz + Math.sin(a) * b.rz);
@@ -493,7 +638,7 @@ export function createWorld(container: HTMLElement, opts: { dark: boolean; onSel
     }
     for (const c of clouds) {
       c.position.x += c.userData.speed * dt;
-      if (c.position.x > 50) c.position.x = -50;
+      if (c.position.x > BOUNDS.maxX + 10) c.position.x = BOUNDS.minX - 10;
     }
     if (ring.visible) {
       const s = 1 + Math.sin(t * 3) * 0.06;
