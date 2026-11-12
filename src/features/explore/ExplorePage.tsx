@@ -52,6 +52,15 @@ export function ExplorePage() {
           <button className="btn sm" onClick={() => setForm({})}><Plus /> Lugar</button>
         </div>
       </div>
+      <Link to="/mundo" className="world-teaser" aria-label="Abrir el Mundo ATLAS">
+        <img className="wt-img" src={`${import.meta.env.BASE_URL}world/teaser.jpg`} alt="" />
+        <div className="wt-body">
+          <div className="tiny" style={{ fontWeight: 800, letterSpacing: '.14em', opacity: 0.85 }}>NUEVO · 3D</div>
+          <div className="wt-title">Mundo <span className="serif">ATLAS</span></div>
+          <div className="small" style={{ opacity: 0.9 }}>Recorre un mini-mundo con los monumentos más icónicos de cada país</div>
+        </div>
+      </Link>
+
       {places && places.length === 0 ? (
         <div className="stack">
           <MapView markers={[]} onPick={(p) => setForm({ point: p })} />

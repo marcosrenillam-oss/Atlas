@@ -17,13 +17,15 @@
   },
   "dependencies": {
     "@fontsource/instrument-serif": "^5.3.0",
+    "@types/three": "^0.187.0",
     "dexie": "^4.4.7",
     "dexie-react-hooks": "^4.4.0",
     "lucide-react": "^1.72.0",
     "maplibre-gl": "^5.24.1",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
-    "react-router-dom": "^7.18.5"
+    "react-router-dom": "^7.18.5",
+    "three": "^0.187.0"
   },
   "devDependencies": {
     "@types/node": "^22.20.5",

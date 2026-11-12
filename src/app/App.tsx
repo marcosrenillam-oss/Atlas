@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { lazy, Suspense, useEffect, useRef } from 'react';
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 import { TabBar } from './TabBar';
@@ -14,6 +14,8 @@ import { ExplorePage } from '../features/explore/ExplorePage';
 import { ExpensesPage } from '../features/expenses/ExpensesPage';
 import { ProfilePage } from '../features/profile/ProfilePage';
 import { PassportPage } from '../features/passport/PassportPage';
+
+const WorldPage = lazy(() => import('../features/world/WorldPage'));
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -107,6 +109,7 @@ export function App() {
             <Route path="/gastos" element={<ExpensesPage />} />
             <Route path="/perfil" element={<ProfilePage />} />
             <Route path="/pasaporte" element={<PassportPage />} />
+            <Route path="/mundo" element={<Suspense fallback={<div className="world" />}><WorldPage /></Suspense>} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </div>

@@ -52,11 +52,15 @@ function fromTrip(t: Trip | undefined, currency: string, homeCity = ''): Draft {
   };
 }
 
-export function TripForm({ open, onClose, trip, onSaved }: { open: boolean; onClose: () => void; trip?: Trip; onSaved?: (id: string) => void }) {
+export function TripForm({ open, onClose, trip, onSaved, initialDestination }: { open: boolean; onClose: () => void; trip?: Trip; onSaved?: (id: string) => void; initialDestination?: string }) {
   const profile = useProfile();
   const ui = useUI();
   const online = useOnline();
-  const [d, setD] = useState<Draft>(() => fromTrip(trip, profile.currency, profile.homeCity ?? ''));
+  const [d, setD] = useState<Draft>(() => {
+    const base = fromTrip(trip, profile.currency, profile.homeCity ?? '');
+    if (!trip && initialDestination) return { ...base, name: `Viaje a ${initialDestination}`, stages: [{ ...base.stages[0], name: initialDestination }] };
+    return base;
+  });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [companion, setCompanion] = useState('');
   const [busy, setBusy] = useState<string | null>(null);

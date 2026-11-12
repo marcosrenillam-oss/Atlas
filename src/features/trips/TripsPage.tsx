@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useMemo, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Luggage, Plus, Search, SearchX } from 'lucide-react';
 import { useTrips } from '../../data/queries';
 import { TripCard } from './TripCard';
@@ -32,7 +32,14 @@ export function TripsPage() {
   const [q, setQ] = useState('');
   const [type, setType] = useState<TripType | 'all'>('all');
   const [sort, setSort] = useState<Sort>('fecha');
-  const [form, setForm] = useState<{ open: boolean; trip?: Trip }>({ open: false });
+  const [params, setParams] = useSearchParams();
+  const initialDest = params.get('nuevo');
+  const [form, setForm] = useState<{ open: boolean; trip?: Trip; dest?: string }>(() => (initialDest ? { open: true, dest: initialDest } : { open: false }));
+  // El destino sugerido (desde el Mundo ATLAS) se consume al abrir: así no interfiere después.
+  useEffect(() => {
+    if (initialDest) setParams({}, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const actions = useTripActions((t) => setForm({ open: true, trip: t }));
 
   const counts = useMemo(() => {
@@ -109,7 +116,7 @@ export function TripsPage() {
           )}
         </div>
       )}
-      {form.open && <TripForm open onClose={() => setForm({ open: false })} trip={form.trip} onSaved={(id) => !form.trip && nav(`/viajes/${id}`)} />}
+      {form.open && <TripForm open onClose={() => setForm({ open: false })} trip={form.trip} initialDestination={form.dest} onSaved={(id) => !form.trip && nav(`/viajes/${id}`)} />}
     </main>
   );
 }

@@ -552,3 +552,78 @@ nav.tabs[aria-label='Secciones del viaje']::before { background: color-mix(in sr
 .keypad { gap: 7px; }
 .keypad button { min-height: 50px; font-size: 22px; }
 .map-card { bottom: 30px; }
+
+/* ─────────── Mundo ATLAS ─────────── */
+.world { position: fixed; inset: 0; z-index: 30; background: #cdebf0; overflow: hidden; }
+:root[data-theme='dark'] .world { background: #0a1a2e; }
+.world-canvas { position: absolute; inset: 0; }
+.world-canvas canvas { display: block; width: 100% !important; height: 100% !important; outline: none; }
+.world-labels { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.world-label {
+  position: absolute; left: 0; top: 0; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap;
+  padding: 5px 10px 5px 7px; border-radius: 999px; border: 0; font-size: 12.5px; font-weight: 700; color: #0d2233;
+  background: rgba(255, 255, 255, 0.86); box-shadow: 0 6px 18px -8px rgba(5, 30, 50, 0.55), inset 0 1px 0 #fff;
+  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); transform-origin: 50% 100%;
+  transition: opacity 0.25s, background 0.25s; will-change: transform;
+}
+.world-label::after { content: ''; position: absolute; left: 50%; bottom: -5px; width: 8px; height: 8px; background: inherit; transform: translateX(-50%) rotate(45deg); border-radius: 2px; }
+.world-label .flag { font-size: 15px; }
+.world-label .vis { display: none; width: 16px; height: 16px; border-radius: 50%; background: linear-gradient(135deg, #ffd166, #f0a52a); color: #fff; font-size: 10px; place-items: center; }
+.world-label.visited .vis { display: inline-grid; }
+.world-label.on { background: var(--grad-brand); color: #fff; }
+.world-top {
+  position: absolute; z-index: 3; top: calc(var(--sat) + 10px); left: 12px; right: 12px; display: flex; align-items: center; gap: 10px;
+}
+.world-title { flex: 1; font-family: var(--font-display); font-weight: 800; font-size: 22px; letter-spacing: -0.03em; line-height: 1.05; padding: 6px 12px; border-radius: 18px; background: color-mix(in srgb, var(--card-solid) 70%, transparent); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur); box-shadow: var(--shadow-1), var(--glass-edge); }
+.world-title .serif { font-weight: 400; }
+.world-ctrls { position: absolute; z-index: 3; right: 12px; bottom: calc(var(--sab) + 96px); display: flex; flex-direction: column; gap: 8px; }
+.world-hint {
+  position: absolute; z-index: 3; left: 50%; bottom: calc(var(--sab) + 100px); transform: translateX(-50%); display: inline-flex; align-items: center; gap: 8px;
+  padding: 10px 14px; border-radius: 999px; font-size: 13px; font-weight: 600; white-space: nowrap; color: #fff; background: rgba(7, 30, 48, 0.72);
+  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); animation: rise 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.world-fail { position: absolute; z-index: 3; left: 16px; right: 16px; top: 40%; text-align: center; }
+
+.lm-sheet {
+  position: absolute; z-index: 4; left: 10px; right: 10px; bottom: calc(var(--sab) + 84px); max-height: 66vh; overflow-y: auto; overscroll-behavior: contain;
+  border-radius: 28px; background: color-mix(in srgb, var(--card-solid) 92%, transparent); box-shadow: var(--shadow-2), var(--glass-edge);
+  backdrop-filter: saturate(1.8) blur(26px); -webkit-backdrop-filter: saturate(1.8) blur(26px); animation: sheet-up 0.45s cubic-bezier(0.2, 0.9, 0.25, 1.05);
+}
+@keyframes sheet-up { from { transform: translateY(40px); opacity: 0; } }
+@media (min-width: 700px) { .lm-sheet { left: auto; right: 16px; width: 400px; bottom: 100px; } }
+.lm-photo { position: relative; height: 190px; overflow: hidden; border-radius: 28px 28px 0 0; }
+.lm-photo img { width: 100%; height: 100%; object-fit: cover; animation: fade 0.5s; }
+.lm-nophoto { display: grid; place-items: center; height: 100%; font-size: 64px; }
+.lm-close { position: absolute; top: 10px; right: 10px; }
+.lm-visited { position: absolute; left: 12px; top: 12px; }
+.lm-body { padding: 14px 18px 18px; display: flex; flex-direction: column; gap: 6px; }
+.lm-country { font-size: 13px; font-weight: 700; color: var(--accent); display: flex; align-items: center; gap: 6px; }
+.lm-name { font-size: 26px; font-weight: 800; letter-spacing: -0.03em; line-height: 1.1; }
+.lm-text { font-size: 15px; line-height: 1.5; color: var(--text-2); margin: 4px 0 6px; }
+.lm-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+.lm-grid > div { display: flex; gap: 8px; padding: 10px; border-radius: 16px; background: var(--card-2); box-shadow: var(--glass-edge); }
+.lm-grid svg { width: 18px; height: 18px; flex: none; color: var(--accent); margin-top: 1px; }
+.lm-grid .k { font-size: 11px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-3); }
+.lm-grid .v { font-size: 13.5px; line-height: 1.35; margin-top: 2px; }
+.lm-credit { margin-top: 6px; }
+.lm-credit a { color: inherit; text-decoration: underline; }
+
+.world-teaser {
+  position: relative; display: flex; align-items: flex-end; min-height: 150px; margin-bottom: 18px; border-radius: 28px; overflow: hidden; color: #fff;
+  background: radial-gradient(circle at 20% 20%, #5eead4, transparent 55%), radial-gradient(circle at 85% 30%, #60a5fa, transparent 55%), linear-gradient(135deg, #14b8c4, #1e40af);
+  box-shadow: var(--shadow-2); transition: transform 0.3s var(--spring);
+}
+.world-teaser:active { transform: scale(0.98); }
+.wt-art { position: absolute; top: 14px; right: 14px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.wt-art span { font-size: 26px; animation: bob 3.6s ease-in-out infinite; filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.25)); }
+.wt-body { position: relative; padding: 16px 18px; max-width: 70%; }
+.wt-title { font-family: var(--font-display); font-weight: 800; font-size: 28px; letter-spacing: -0.03em; }
+.wt-title .serif { font-weight: 400; }
+.world-label.compact { padding: 4px 6px; gap: 0; }
+.world-label.compact .nm { display: none; }
+.world-label .nm { transition: opacity 0.2s; }
+.world-teaser { min-height: 210px; background: #74c5cc; }
+.wt-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform 0.8s var(--ease); }
+.world-teaser:hover .wt-img { transform: scale(1.03); }
+.world-teaser::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to top, rgba(5, 30, 50, 0.72), rgba(5, 30, 50, 0.05) 60%); }
+.wt-body { z-index: 1; max-width: 85%; }

@@ -5,7 +5,7 @@ import { t } from '../i18n';
 const TABS = [
   { to: '/', label: t('nav.home'), Icon: Home, end: true },
   { to: '/viajes', label: t('nav.trips'), Icon: Luggage, end: false },
-  { to: '/explorar', label: t('nav.explore'), Icon: Compass, end: false },
+  { to: '/explorar', label: t('nav.explore'), Icon: Compass, end: false, also: '/mundo' },
   { to: '/gastos', label: t('nav.expenses'), Icon: Wallet, end: false },
   { to: '/perfil', label: t('nav.profile'), Icon: UserRound, end: false, also: '/pasaporte' },
 ];
@@ -17,7 +17,7 @@ export function TabBar() {
     <nav className="tabbar" aria-label="Navegación principal">
       <span className="tab-indicator" style={{ transform: `translateX(${idx * 100}%)` }} aria-hidden="true" />
       {TABS.map(({ to, label, Icon, end }) => (
-        <NavLink key={to} to={to} end={end} className={({ isActive }) => (isActive ? 'active' : '')}>
+        <NavLink key={to} to={to} end={end} className={({ isActive }) => (isActive || TABS[idx]?.to === to ? 'active' : '')}>
           <Icon aria-hidden="true" />
           <span>{label}</span>
         </NavLink>

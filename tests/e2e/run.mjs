@@ -98,7 +98,7 @@ async function createTrip(page, { name, stages, start, end, companions = [], bud
   await start('npx', ['vite', 'preview', '--port', String(PORT), '--strictPort'], {}, /localhost/);
   rmSync(join(root, 'server/data-e2e'), { recursive: true, force: true });
   await start('node', ['server/sync-server.mjs'], { ATLAS_SYNC_TOKEN: TOKEN, PORT: String(SYNC_PORT), ATLAS_DATA_DIR: join(root, 'server/data-e2e') }, /escuchando/);
-  const browser = await chromium.launch();
+  const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
   const A = await newDevice(browser, 'A');
   const { page, ctx } = A;
   globalThis.__page = () => A.page;
@@ -584,6 +584,32 @@ async function createTrip(page, { name, stages, start, end, companions = [], bud
     await pg.getByText(/1 de 12|2 de 12|3 de 12/).waitFor();
     await shot(pg, '22-pasaporte');
     await F.ctx.close();
+    globalThis.__page = () => A.page;
+  });
+
+  await step('Mundo ATLAS: mini-mundo 3D, ficha con foto real y planear viaje', async () => {
+    const G = await newDevice(browser, 'mundo');
+    const pg = G.page;
+    globalThis.__page = () => pg;
+    await pg.goto(`${BASE}/explorar`);
+    await pg.getByRole('link', { name: 'Abrir el Mundo ATLAS' }).click();
+    await pg.waitForURL(/\/mundo$/);
+    await pg.locator('.world-canvas canvas').waitFor({ timeout: 30000 });
+    await pg.waitForTimeout(2500);
+    await shot(pg, '23-mundo');
+    await pg.getByRole('button', { name: 'Coliseo, Italia' }).evaluate((el) => el.click());
+    await pg.getByRole('heading', { name: 'Coliseo' }).waitFor();
+    await pg.getByText('Plato típico').waitFor();
+    await pg.waitForFunction(() => { const i = document.querySelector('.lm-photo img'); return i && i.complete && i.naturalWidth > 0; }, null, { timeout: 15000 });
+    await pg.getByText(/Foto: .* Wikimedia Commons/).waitFor();
+    await shot(pg, '24-mundo-ficha');
+    await pg.getByRole('button', { name: 'Planear un viaje a Roma' }).evaluate((el) => el.click());
+    await pg.waitForURL(/\/viajes/);
+    assert.equal(await pg.getByLabel('Destino 1').inputValue(), 'Roma');
+    await sheetSave(pg);
+    await pg.waitForURL(/\/viajes\/[^/]+$/);
+    await pg.getByRole('heading', { name: 'Viaje a Roma' }).waitFor();
+    await G.ctx.close();
     globalThis.__page = () => A.page;
   });
 

@@ -36,12 +36,19 @@ export default defineConfig({
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,webmanifest,woff2}'],
         // Las splash de iOS solo se usan al instalar; no hace falta precachearlas.
-        globIgnores: ['**/icons/splash-*'],
+        globIgnores: ['**/icons/splash-*', '**/world/*.jpg', '**/world/credits.json'],
         navigateFallback: 'index.html',
         cleanupOutdatedCaches: true,
         // Las teselas de OpenStreetMap NO se guardan en el Service Worker:
         // su política de uso prohíbe la descarga masiva / offline.
-        runtimeCaching: [],
+        runtimeCaching: [
+          {
+            // Fotos de monumentos del Mundo ATLAS: se guardan al verlas por primera vez.
+            urlPattern: ({ url }: { url: URL }) => url.pathname.includes('/world/') && url.pathname.endsWith('.jpg'),
+            handler: 'CacheFirst',
+            options: { cacheName: 'atlas-world-photos', expiration: { maxEntries: 40 } },
+          },
+        ],
       },
       devOptions: { enabled: false },
     }),

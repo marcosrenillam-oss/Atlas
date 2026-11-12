@@ -177,6 +177,13 @@ Cómo funciona:
 - **Pasaporte**: mapa de tus viajes, países con bandera, ciudades, días, kilómetros, años y 12 logros.
 - **Mapas vectoriales** (MapLibre + OpenFreeMap): claro/oscuro, nombres en español, pines por categoría, ficha inferior, tu ubicación, recorrido del día en curva.
 
+## 6c. Mundo ATLAS (Explorar)
+
+Mini-mundo 3D (Three.js) con 18 monumentos icónicos modelados a mano con piezas low-poly, sobre islas-continente de hexágonos con mini-ciudades, árboles, mar animado, barcos, aviones y nubes; día y noche (luces encendidas). Un dedo mueve, dos dedos acercan y giran; al tocar un monumento la cámara vuela hasta él y se abre su ficha: foto real, historia breve, plato típico, curiosidad, cómo saludar, mejor época y «Planear un viaje».
+
+- Las fotos se descargaron **una vez** de Wikimedia Commons con autor y licencia (`public/world/credits.json`, script `scripts/fetch-landmark-photos.py`); no se generan en el momento. Se guardan en el móvil al verlas para usarlas sin conexión.
+- Los países de tus viajes vividos aparecen con una marca dorada.
+
 ## 7. Limitaciones reales
 
 - **Mapas sin conexión**: ATLAS no descarga cartografía para uso offline (OpenStreetMap lo prohíbe y OpenFreeMap lo limita). Sin conexión verás un plano local esquemático con tus puntos, distancias aproximadas y el norte, no un mapa. Para tener cartografía offline habría que autoalojar teselas (por ejemplo, un archivo PMTiles) y añadirlas en `src/maps/provider.ts`.
@@ -188,6 +195,7 @@ Cómo funciona:
 - **Espacio**: depende del navegador. Safari en iPhone suele permitir varios GB a las apps instaladas, pero no hay una cifra garantizada. El uso real aparece en Perfil.
 - **Tipos de cambio**: se rellenan solos con tipos de referencia de bancos centrales (no los de tu banco o tarjeta); siempre puedes cambiarlos.
 - **Tiempo**: la previsión solo existe hasta 16 días vista; antes, la app lo indica.
+- **Mundo ATLAS**: necesita WebGL (todos los iPhone actuales lo tienen). Los monumentos son ilustraciones 3D estilizadas, no réplicas exactas; las fotos de un monumento solo están sin conexión si abriste antes su ficha con conexión.
 - **Idiomas**: la interfaz está en español. La estructura `src/i18n/` está preparada, pero de momento solo la navegación, las acciones comunes, los estados y las pestañas pasan por el diccionario; el resto de textos están en los componentes y habría que extraerlos para traducir la app.
 - **Probado**: en Chromium emulando iPhone 13 mini e iPhone SE, incluidos el modo avión, la persistencia y la sincronización. **No se ha probado en un iPhone físico con Safari**: conviene hacer una prueba de instalación real antes de viajar.
 
@@ -199,6 +207,7 @@ Cómo funciona:
 | Nominatim (OSM) | Buscar lugares, al pulsar Buscar | Gratis | Máx. 1 petición/s, sin autocompletado, atribución |
 | Open-Meteo | Tiempo (16 días) y ubicar destinos | Gratis (uso no comercial) | Máx. 10.000 llamadas/día; CC BY 4.0; se guarda para verlo sin conexión |
 | Frankfurter | Tipos de cambio de referencia | Gratis | Sin clave; datos de bancos centrales; último tipo guardado para usarlo sin conexión |
+| Wikimedia Commons | Fotos de los 18 monumentos (descargadas una vez, incluidas en la app) | Gratis | Licencias CC/dominio público; autor y licencia en cada ficha |
 | Wikipedia REST API | Foto de portada opcional | Gratis | Sin clave; licencia de cada imagen en Wikimedia |
 | Apple Maps / Google Maps | Enlaces de navegación externa | Gratis | Abre la app de mapas del dispositivo |
 | GitHub Pages / Cloudflare Pages | Alojar la web | Gratis | Ver límites en la sección 2 |
