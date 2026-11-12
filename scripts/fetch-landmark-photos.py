@@ -14,6 +14,8 @@ ES = {
   'muralla': 'Gran_Muralla_China', 'torii': 'Itsukushima-jinja', 'opera': 'Ópera_de_Sídney',
 }
 FORCED = {'coliseo': 'Colosseo_2020.jpg'}
+# Fotos elegidas a mano cuando la de portada no sirve (mapas, satélite…).
+FORCED.update(json.load(open('scripts/landmark-photo-overrides.json')) if __import__('os').path.exists('scripts/landmark-photo-overrides.json') else {})
 # id -> (artículo de Wikipedia en inglés, archivo concreto opcional), leído de los datos del mundo.
 LANDMARKS = {}
 for region in ('eu', 'am', 'af', 'as', 'oc'):
@@ -66,6 +68,15 @@ for lid, (title, forced) in LANDMARKS.items():
                     fname = cand
                     break
         if not fname:
+            # Alternativa: buscar directamente en Wikimedia Commons una foto con ese nombre.
+            q = urllib.parse.urlencode({'action': 'query', 'list': 'search', 'srnamespace': 6, 'srlimit': 8,
+                                        'srsearch': f'{title.replace("_", " ")} filetype:bitmap', 'format': 'json'})
+            for hit in json.loads(get(f'https://commons.wikimedia.org/w/api.php?{q}'))['query']['search']:
+                cand = hit['title'].removeprefix('File:')
+                if re.search(r'\.jpe?g$', cand, re.I) and not re.search(r'logo|map|mapa|locator|flag|stamp|coat', cand, re.I):
+                    fname = cand
+                    break
+        if not fname:
             raise RuntimeError('sin foto adecuada')
         q = urllib.parse.urlencode({'action': 'query', 'titles': f'File:{fname}', 'prop': 'imageinfo',
                                     'iiprop': 'url|extmetadata', 'iiurlwidth': 960, 'format': 'json'})
@@ -88,7 +99,8 @@ for lid, (title, forced) in LANDMARKS.items():
             'source': ii.get('descriptionurl', ''),
             'w': img.width, 'h': img.height,
         }
-        print('OK ', lid, fname, '·', credits[lid]['license'], '·', credits[lid]['author'][:40])
+        print('OK ', lid, fname, '·', credits[lid]['license'], '·', credits[lid]['author'][:40], flush=True)
+        json.dump(credits, open(f'{OUT}/credits.json', 'w'), ensure_ascii=False, indent=1)
         time.sleep(4)
     except Exception as e:
         print('ERR', lid, title, e)

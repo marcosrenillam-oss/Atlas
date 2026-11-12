@@ -402,16 +402,19 @@ function ziggurat() {
 
 function palaceAsian() {
   const g = grp();
-  const stone = mat('#cfc7b6'), red = mat('#b8423a'), roof = mat('#3f4a52'), green = mat('#5c8a6a');
-  box(g, 2.6, 0.35, 1.6, stone);
-  box(g, 2.0, 0.75, 1.1, red, 0, 0.35);
-  for (const [w, y, h] of [[2.9, 1.1, 0.45], [1.8, 1.45, 0.4]] as const) {
-    const r = pyramid(g, w / 1.25, h, roof, 0, y, 0);
-    r.scale.z = 0.62;
+  const stone = mat('#cfc7b6'), red = mat('#b8423a'), roof = mat('#56626c'), green = mat('#5c8a6a');
+  box(g, 2.6, 0.3, 1.5, stone);
+  box(g, 1.9, 0.7, 0.95, red, 0, 0.3);
+  for (let i = -3; i <= 3; i++) box(g, 0.07, 0.7, 0.07, mat('#7a2a24'), i * 0.3, 0.3, 0.5);
+  // tejado de dos aguas con aleros, en dos pisos
+  for (const [w, d, y, h] of [[2.4, 1.35, 1.0, 0.35], [1.6, 0.9, 1.42, 0.3]] as const) {
+    box(g, w, 0.08, d, roof, 0, y);
+    pediment(g, w * 0.92, h, d * 0.9, roof, 0, y + 0.08);
+    if (y < 1.2) box(g, w * 0.7, 0.3, d * 0.6, red, 0, y + 0.08);
   }
-  box(g, 1.6, 0.06, 0.06, GOLD(), 0, 1.88);
-  for (let i = -3; i <= 3; i++) box(g, 0.06, 0.75, 0.06, mat('#7a2a24'), i * 0.3, 0.35, 0.57);
-  cone(g, 1.4, 1.8, 7, green, 0.6, 0, -1.6);
+  box(g, 1.5, 0.05, 0.05, GOLD(), 0, 1.79);
+  cone(g, 1.3, 1.6, 7, green, 0.5, 0, -1.6);
+  cone(g, 1.0, 1.2, 7, mat('#6c9a72'), -1.0, 0, -1.5);
   return g;
 }
 
@@ -1151,18 +1154,19 @@ function cliffs() {
 
 function fjord() {
   const g = grp();
-  const rock = mat('#6f7778');
-  box(g, 3.2, 0.06, 0.9, DEEP(), 0, 0);
-  for (const s of [-1, 1]) {
-    for (let i = 0; i < 3; i++) {
-      const h = 2.2 + ((i + (s > 0 ? 1 : 0)) % 2) * 0.6;
-      box(g, 1.1, h, 0.9, rock, -1.1 + i * 1.1, 0, s * 0.9);
-      box(g, 1.12, 0.1, 0.92, LEAF(), -1.1 + i * 1.1, h, s * 0.9);
-    }
+  const rock = mat('#6f7778'), rock2 = mat('#7d8586');
+  box(g, 3.4, 0.06, 0.9, DEEP(), 0, 0);
+  for (const s of [-1, 1]) for (let i = 0; i < 3; i++) {
+    const h = 1.8 + ((i + (s > 0 ? 1 : 0)) % 2) * 0.7, x = -1.1 + i * 1.1;
+    const m = cone(g, 0.75, h, 6, i % 2 ? rock : rock2, x, 0, s * 1.05);
+    m.scale.z = 0.75;
+    cone(g, 0.32, h * 0.3, 6, LEAF(), x, h * 0.05, s * 1.05).scale.set(2.0, 1, 1.4);
+    if (h > 2.2) cone(g, 0.22, h * 0.25, 6, SNOW(), x, h * 0.75, s * 1.05);
   }
-  box(g, 0.12, 2.2, 0.04, mat('#e3f6fb', { rough: 0.4 }), 0.4, 0.05, -0.43);
-  const boat = box(g, 0.6, 0.16, 0.22, WHITE(), -0.5, 0.05, 0);
+  box(g, 0.1, 1.4, 0.04, mat('#e3f6fb', { rough: 0.4 }), 0.55, 0.05, -0.55);
+  const boat = box(g, 0.6, 0.16, 0.22, WHITE(), -0.4, 0.05, 0);
   boat.rotation.y = 0.1;
+  box(g, 0.25, 0.14, 0.18, mat('#2f8fc2'), -0.45, 0.2, 0);
   return g;
 }
 
