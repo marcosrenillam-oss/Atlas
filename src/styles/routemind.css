@@ -291,3 +291,4 @@ a.link, .link { color: var(--text); text-decoration: underline; text-decoration-
 .welcome-body h1.kicker { font-size: 14px; font-weight: 600; letter-spacing: 0; color: rgba(255, 255, 255, 0.85); }
 .cover .ticket-over { left: 3%; right: 14%; bottom: -10%; height: 86%; }
 .trip-cover .credit { top: 10px; bottom: auto; right: 12px; left: auto; max-width: 70%; }
+.map-offline-note { display: inline-flex; margin: 0 0 8px; padding: 6px 12px; border-radius: 999px; background: var(--blush); color: var(--blush-ink); font-weight: 600; }

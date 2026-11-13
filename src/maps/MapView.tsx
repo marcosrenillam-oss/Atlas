@@ -1,8 +1,9 @@
-import { lazy, Suspense, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { useOnline } from '../app/hooks';
 import type { GeoPoint, PlaceCategory } from '../domain/types';
 import type { Tone } from '../ui/tones';
 import { OfflinePlot } from './OfflinePlot';
+import { MAP_STYLE } from './provider';
 
 export interface MapMarker {
   id: string;
@@ -29,18 +30,39 @@ export interface MapViewProps {
 
 const VectorMap = lazy(() => import('./VectorMap'));
 
+/** ¿Está guardado el estilo del mapa en el Service Worker? (entonces funciona sin conexión) */
+function useCachedStyle(online: boolean): boolean | null {
+  const [cached, setCached] = useState<boolean | null>(online ? true : null);
+  useEffect(() => {
+    if (online) return setCached(true);
+    let alive = true;
+    if (!('caches' in window)) {
+      setCached(false);
+      return;
+    }
+    void caches.match(MAP_STYLE).then((r) => alive && setCached(!!r), () => alive && setCached(false));
+    return () => {
+      alive = false;
+    };
+  }, [online]);
+  return cached;
+}
+
 /**
- * Mapa vectorial (MapLibre + OpenFreeMap) con conexión. Sin conexión, sin WebGL o si la
- * cartografía no carga, muestra el plano local con los lugares guardados.
+ * Mapa vectorial (MapLibre + OpenFreeMap). Las zonas vistas con conexión quedan guardadas y se ven
+ * igual sin ella. Si no hay nada guardado, no hay WebGL o la cartografía no carga, muestra el plano
+ * local con los lugares guardados.
  */
 export function MapView(props: MapViewProps) {
   const online = useOnline();
+  const cached = useCachedStyle(online);
   const [failed, setFailed] = useState(false);
-  if (!online || failed) {
+  if (cached === null) return <div className="map-wrap"><div className={`map ${props.className ?? ''} map-loading`} /></div>;
+  if (failed || !cached) {
     return (
       <div className="map-wrap map-offline stack-sm">
         <div className="notice warn small" style={{ margin: 0 }}>
-          {online ? 'No se pudo cargar la cartografía.' : 'Sin conexión: el mapa base no está disponible.'} Se muestran tus lugares guardados en un plano local con sus coordenadas.
+          {online ? 'No se pudo cargar la cartografía.' : 'Sin conexión y sin mapa guardado de esta zona.'} Se muestran tus lugares guardados en un plano local con sus coordenadas.
         </div>
         <OfflinePlot markers={props.markers} route={props.route} />
       </div>
@@ -48,6 +70,7 @@ export function MapView(props: MapViewProps) {
   }
   return (
     <Suspense fallback={<div className="map-wrap"><div className={`map ${props.className ?? ''} map-loading`} /></div>}>
+      {!online && <div className="map-offline-note small">Sin conexión · se ven las zonas que ya abriste</div>}
       <VectorMap {...props} onFail={() => setFailed(true)} />
     </Suspense>
   );

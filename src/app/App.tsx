@@ -6,7 +6,9 @@ import { NetBar } from './NetBar';
 import { applyTheme, watchSystemTheme } from './theme';
 import { useProfile } from '../data/settings';
 import { UIProvider, useUI } from '../ui/UIProvider';
-import { Ambient } from '../ui/Ambient';
+import { destinationPhoto } from '../ui/Cover';
+import { db } from '../data/db';
+import { runOfflinePack } from './offlinePack';
 import { HomePage } from '../features/home/HomePage';
 import { TripsPage } from '../features/trips/TripsPage';
 import { TripPage } from '../features/trip/TripPage';
@@ -91,6 +93,24 @@ function Themer() {
   return null;
 }
 
+/** Prepara la app para verse igual sin conexión: guarda en segundo plano las fotos (primero las de tus viajes). */
+function OfflinePack() {
+  useEffect(() => {
+    const go = async () => {
+      const trips = await db.trips.toArray().catch(() => []);
+      const mine = trips.map((t) => destinationPhoto(t)).filter((x): x is string => !!x);
+      await runOfflinePack(mine);
+    };
+    const t = setTimeout(() => void go(), 3500);
+    window.addEventListener('online', go);
+    return () => {
+      clearTimeout(t);
+      window.removeEventListener('online', go);
+    };
+  }, []);
+  return null;
+}
+
 export function App() {
   return (
     <UIProvider>
@@ -98,7 +118,7 @@ export function App() {
         <Themer />
         <AutoUpdate />
         <ScrollToTop />
-        <Ambient />
+        <OfflinePack />
         <NetBar />
         <div className="shell">
           <Routes>

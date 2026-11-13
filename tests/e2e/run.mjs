@@ -54,7 +54,7 @@ async function newDevice(browser, name, extra = {}) {
   const ctx = await browser.newContext({ ...iphone, locale: 'es-ES', timezoneId: 'Europe/Madrid', acceptDownloads: true, ...extra });
   const page = await ctx.newPage();
   page.on('console', (m) => {
-    if (m.type() === 'error' && !/tile\.openstreetmap|ERR_INTERNET_DISCONNECTED|Failed to load resource|net::ERR|blocked by CORS policy/.test(m.text())) consoleErrors.push(`[${name}] ${m.text()}`);
+    if (m.type() === 'error' && !/tile\.openstreetmap|ERR_INTERNET_DISCONNECTED|Failed to load resource|net::ERR|blocked by CORS policy|AJAXError: Failed to fetch \(0\)/.test(m.text())) consoleErrors.push(`[${name}] ${m.text()}`);
   });
   page.on('pageerror', (e) => consoleErrors.push(`[${name}] pageerror ${e.message}`));
   return { ctx, page };
@@ -363,8 +363,9 @@ async function createTrip(page, { name, stages, start, end, companions = [], bud
     await p().locator('.viewer iframe').waitFor();
     await p().locator('.viewer').getByRole('button', { name: 'Cerrar' }).click();
     await tab(p(), 'Mapa');
-    await p().getByText('Sin conexión: el mapa base no está disponible.').waitFor();
-    await p().locator('svg.plot').waitFor();
+    // el mapa de este viaje ya se abrió con conexión: se ve el mapa guardado, no el plano
+    await p().getByText('Sin conexión · se ven las zonas que ya abriste').waitFor();
+    await p().locator('.map canvas').waitFor({ timeout: 30000 });
     await shot(p(), '13-offline-mapa');
     await tab(p(), 'Gastos');
     await p().getByRole('button', { name: 'Gasto', exact: true }).click();
@@ -645,6 +646,42 @@ async function createTrip(page, { name, stages, start, end, companions = [], bud
     assert.equal(await pg.getByLabel('Nombre', { exact: true }).inputValue(), hit.name);
     await sheetSave(pg);
     await pg.getByText(hit.name).first().waitFor();
+    await G.ctx.close();
+    globalThis.__page = () => A.page;
+  });
+
+  await step('Sin conexión se ve igual: fotos de portada, Mundo ATLAS y mapa guardado', async () => {
+    const G = await newDevice(browser, 'igual-offline');
+    const pg = G.page;
+    globalThis.__page = () => pg;
+    await pg.goto(BASE);
+    await pg.evaluate(async () => { await navigator.serviceWorker.ready; });
+    await pg.reload();
+    const id = await createTrip(pg, { name: 'Lisboa sin red', origin: 'Madrid', stages: ['Lisboa'], start: '2026-12-04', end: '2026-12-08' });
+    // Con conexión: se abre una zona del mapa (centro de Lisboa), que queda guardada.
+    const lisboa = () => document.querySelector('.map').__map.jumpTo({ center: [-9.1393, 38.7107], zoom: 15 });
+    const ready = () => { const m = document.querySelector('.map')?.__map; return !!m && m.isStyleLoaded() && m.areTilesLoaded() && m.queryRenderedFeatures().length > 20; };
+    await pg.goto(`${BASE}/explorar`);
+    await pg.waitForFunction(() => document.querySelector('.map')?.__map?.isStyleLoaded(), null, { timeout: 30000 });
+    await pg.evaluate(lisboa);
+    await pg.waitForFunction(ready, null, { timeout: 30000 });
+    await pg.waitForTimeout(1500);
+    await pg.goto(`${BASE}/perfil`);
+    await pg.waitForFunction(() => /(\d+) de \1 guardadas/.test(document.body.innerText), null, { timeout: 120000 });
+    // Sin conexión: la misma zona, las portadas y el Mundo se ven igual.
+    await G.ctx.setOffline(true);
+    const imgOk = (sel) => pg.waitForFunction((sel) => { const i = document.querySelector(sel); return i && i.complete && i.naturalWidth > 0; }, sel, { timeout: 15000 });
+    await pg.goto(`${BASE}/viajes/${id}`);
+    await imgOk('.trip-cover img');
+    await pg.goto(`${BASE}/explorar`);
+    await imgOk('.wt-img');
+    await pg.getByText('Sin conexión · se ven las zonas que ya abriste').waitFor();
+    assert.equal(await pg.locator('.map-offline').count(), 0, 'sin conexión debería verse el mapa guardado, no el plano');
+    await pg.waitForFunction(() => document.querySelector('.map')?.__map?.isStyleLoaded(), null, { timeout: 30000 });
+    await pg.evaluate(lisboa);
+    await pg.waitForFunction(ready, null, { timeout: 30000 });
+    await pg.locator('.map').scrollIntoViewIfNeeded();
+    await shot(pg, '26-mapa-sin-conexion');
     await G.ctx.close();
     globalThis.__page = () => A.page;
   });

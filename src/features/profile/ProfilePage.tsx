@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { Link } from 'react-router-dom';
-import { ChevronRight, Globe2 } from 'lucide-react';
+import { ChevronRight, CloudOff, Globe2, Map as MapIcon } from 'lucide-react';
 import {
   CloudCog, Database, Download, HardDrive, Info, Languages, Moon, RefreshCw, ShieldCheck, Smartphone, Trash2, Upload, Wallet,
 } from 'lucide-react';
@@ -20,6 +20,7 @@ import { SyncBadge } from '../../app/SyncBadge';
 import { isStandalone, requestPersistence, useOnline, useSyncState } from '../../app/hooks';
 import { configureSync, disableSync, syncNow } from '../../sync/engine';
 import { initials } from '../trip/SummaryTab';
+import { runOfflinePack, usePackState } from '../../app/offlinePack';
 
 export function ProfilePage() {
   const profile = useProfile();
@@ -175,6 +176,7 @@ export function ProfilePage() {
         <section>
           <div className="section-head"><h2>Almacenamiento</h2></div>
           <div className="list">
+            <OfflineRows />
             <div className="list-row">
               <div className="icon-tile"><HardDrive /></div>
               <div className="grow">
@@ -347,3 +349,30 @@ function SyncSheet({ onClose }: { onClose: () => void }) {
     </Sheet>
   );
 }
+
+/** Estado de lo guardado para usar ATLAS igual sin conexión. */
+function OfflineRows() {
+  const pack = usePackState();
+  const online = useOnline();
+  const complete = pack.total > 0 && pack.done >= pack.total;
+  return (
+    <>
+      <div className="list-row">
+        <div className="icon-tile"><CloudOff /></div>
+        <div className="grow">
+          <div>Fotos para usar sin conexión</div>
+          <div className="meta">
+            {pack.total ? `${pack.done} de ${pack.total} guardadas${complete ? ' · listo' : pack.running ? ' · descargando…' : ''}` : 'Comprobando…'}
+          </div>
+          {pack.total > 0 && !complete && <div className="progress" style={{ marginTop: 6 }}><div style={{ width: `${(pack.done / pack.total) * 100}%` }} /></div>}
+        </div>
+        {!complete && !pack.running && online && pack.total > 0 && <button className="btn sm secondary" onClick={() => void runOfflinePack()}>Descargar</button>}
+      </div>
+      <div className="list-row">
+        <div className="icon-tile"><MapIcon /></div>
+        <div className="grow"><div>Mapas sin conexión</div><div className="meta">Cada zona que abres con conexión se guarda y se ve igual sin ella. Antes de viajar, abre el mapa del viaje y acércate a las zonas que vayas a visitar.</div></div>
+      </div>
+    </>
+  );
+}
+

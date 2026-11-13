@@ -39,9 +39,21 @@ export default defineConfig({
         globIgnores: ['**/icons/splash-*', '**/world/*.jpg', '**/world/credits.json'],
         navigateFallback: 'index.html',
         cleanupOutdatedCaches: true,
-        // Las teselas de OpenStreetMap NO se guardan en el Service Worker:
-        // su política de uso prohíbe la descarga masiva / offline.
+        // Mapas (OpenFreeMap): las zonas que el usuario abre con conexión quedan guardadas para verlas
+        // igual sin conexión. No se descargan zonas de forma masiva (condiciones de OpenFreeMap: como
+        // mucho 3.000 teselas o 50 MB por descarga). Las teselas de openstreetmap.org no se usan.
         runtimeCaching: [
+          {
+            urlPattern: ({ url }: { url: URL }) => url.hostname === 'tiles.openfreemap.org' && url.pathname.endsWith('.pbf') && !url.pathname.includes('/fonts/'),
+            handler: 'CacheFirst',
+            options: { cacheName: 'atlas-map-tiles', expiration: { maxEntries: 3000, maxAgeSeconds: 60 * 24 * 3600 }, cacheableResponse: { statuses: [200] } },
+          },
+          {
+            // Estilo, TileJSON, iconos y tipografías del mapa: se actualizan con conexión y se usan sin ella.
+            urlPattern: ({ url }: { url: URL }) => url.hostname === 'tiles.openfreemap.org',
+            handler: 'StaleWhileRevalidate',
+            options: { cacheName: 'atlas-map-style', expiration: { maxEntries: 400, maxAgeSeconds: 120 * 24 * 3600 }, cacheableResponse: { statuses: [200] } },
+          },
           {
             // Fotos de monumentos del Mundo ATLAS: se guardan al verlas por primera vez.
             urlPattern: ({ url }: { url: URL }) => url.pathname.includes('/world/') && url.pathname.endsWith('.jpg'),
