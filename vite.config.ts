@@ -12,7 +12,7 @@ export default defineConfig({
     VitePWA({
       registerType: 'prompt',
       injectRegister: false,
-      includeAssets: ['icons/atlas.svg', 'icons/apple-touch-icon.png'],
+      includeAssets: ['icons/atlas.svg', 'icons/apple-touch-icon.png', 'welcome.jpg'],
       manifest: {
         id: base,
         name: 'ATLAS — Travel Control Center',
@@ -24,8 +24,8 @@ export default defineConfig({
         scope: base,
         display: 'standalone',
         orientation: 'portrait',
-        background_color: '#F7F3EC',
-        theme_color: '#F7F3EC',
+        background_color: '#F2F3F5',
+        theme_color: '#F2F3F5',
         categories: ['travel', 'productivity'],
         icons: [
           { src: 'icons/icon-192.png', sizes: '192x192', type: 'image/png' },

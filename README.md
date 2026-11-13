@@ -1,6 +1,6 @@
 # ATLAS — Travel Control Center
 
-**Diseño Aurora:** fondo aurora animado, superficies de cristal, cursiva serif en degradado, anillos de progreso, contadores animados y destellos al completar tareas. Modo claro (amanecer) y oscuro (noche estrellada). Respeta «Reducir movimiento» de iOS.
+**Diseño editorial:** fotos a sangre, titulares altos y estrechos (tipografía Six Caps, licencia OFL, incluida en la app para funcionar sin conexión), fondo claro neutro, negro como color de acción con un rosa salmón de acento, tarjetas de viaje con foto y la barra de pestañas flotante y oscura. Cada viaje usa como portada tu foto o, si no has puesto ninguna, una foto real (Wikimedia Commons, con autor y licencia) del monumento del país de destino, con tu tarjeta de embarque origen → destino encima; sin conexión o sin foto disponible se muestra el avión con los billetes. Bienvenida a pantalla completa. Modo claro y oscuro. Respeta «Reducir movimiento» de iOS. (Capas: `app.css` → `aurora.css` → `routemind.css`; el índice país → foto se genera con `node scripts/gen-cover-photos.mjs`.)
 
 Aplicación web progresiva (PWA) para planificar y gestionar viajes. Es **offline-first**: todo se guarda en tu dispositivo, funciona en modo avión y no necesita cuentas, suscripciones ni servicios de pago.
 
@@ -175,7 +175,7 @@ Cómo funciona:
 - **Diario** por día con texto y fotos.
 - **Resumen del viaje** animado y compartible como imagen para Stories (creada en el móvil).
 - **Pasaporte**: mapa de tus viajes, países con bandera, ciudades, días, kilómetros, años y 12 logros.
-- **Mapas vectoriales a color** (MapLibre + OpenFreeMap «Liberty» recoloreado con la paleta Mediterráneo): claro/oscuro, nombres en español, pines por categoría, tu ubicación, recorrido del día en curva. Al acercarte a una ciudad aparecen bares, cafés, restaurantes, tiendas, museos, hoteles y transporte de OpenStreetMap; tócalos para ver qué son, cómo llegar o guardarlos como lugar (nombre, categoría y ubicación ya rellenos).
+- **Mapas vectoriales a color** (MapLibre + OpenFreeMap «Liberty» recoloreado con colores suaves): claro/oscuro, nombres en español, pines por categoría, tu ubicación, recorrido del día en curva. Al acercarte a una ciudad aparecen bares, cafés, restaurantes, tiendas, museos, hoteles y transporte de OpenStreetMap; tócalos para ver qué son, cómo llegar o guardarlos como lugar (nombre, categoría y ubicación ya rellenos).
 
 ## 6c. Mundo ATLAS (Explorar)
 

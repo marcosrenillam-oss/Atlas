@@ -1,0 +1,293 @@
+/* ATLAS · Editorial — capa estética v3
+   Inspirada en un estilo editorial de viajes: fotos grandes, titulares altos y estrechos (Six Caps),
+   fondo claro neutro, negro como color de acción, un rosa salmón de acento y la barra de pestañas
+   flotante y oscura. Se carga después de app.css y aurora.css y sobrescribe tokens y apariencia. */
+
+@import '@fontsource/six-caps/latin-400.css';
+
+:root {
+  --bg: #f2f3f5;
+  --bg-elev: #e9eaed;
+  --card: #ffffff;
+  --card-solid: #ffffff;
+  --card-2: #f6f6f8;
+  --glass-border: transparent;
+  --glass-edge: inset 0 0 0 1px rgba(17, 17, 19, 0.04);
+  --text: #111113;
+  --text-2: #5d6168;
+  --text-3: #9a9ea6;
+  --line: rgba(17, 17, 19, 0.08);
+  --line-strong: rgba(17, 17, 19, 0.14);
+  --accent: #111113;
+  --accent-ink: #ffffff;
+  --accent-2: #e8907e;
+  --accent-soft: #ececef;
+  --accent-soft-2: #f4f4f6;
+  --blush: #f3b9ad;
+  --blush-ink: #4a1f17;
+  --success: #1f7a55;
+  --success-soft: #e1f0e8;
+  --warn: #9a5b12;
+  --warn-soft: #f6ead6;
+  --danger: #c4312b;
+  --danger-soft: #f9e4e2;
+  --input-bg: #ffffff;
+  --tab-bg: rgba(24, 24, 27, 0.88);
+  --scrim: rgba(10, 10, 12, 0.35);
+
+  --grad-brand: linear-gradient(#111113, #111113);
+  --grad-violet: linear-gradient(#111113, #111113);
+  --grad-sunset: linear-gradient(135deg, #f6c7bb, #ee9c89);
+  --grad-text: linear-gradient(#111113, #111113);
+  --glow: 0 10px 24px -12px rgba(0, 0, 0, 0.45);
+
+  --shadow-1: 0 1px 2px rgba(17, 17, 19, 0.04), 0 10px 28px -16px rgba(17, 17, 19, 0.18);
+  --shadow-2: 0 2px 6px rgba(17, 17, 19, 0.05), 0 26px 50px -22px rgba(17, 17, 19, 0.35);
+  --blur: saturate(1.6) blur(18px);
+
+  --font-poster: 'Six Caps', 'Bebas Neue', 'Oswald', Impact, sans-serif-condensed, sans-serif;
+  --r-md: 18px;
+  --r-lg: 24px;
+  --r-xl: 30px;
+}
+
+:root[data-theme='dark'] {
+  --bg: #0b0b0d;
+  --bg-elev: #17171a;
+  --card: #18181b;
+  --card-solid: #18181b;
+  --card-2: #1f1f23;
+  --glass-edge: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+  --text: #f4f4f5;
+  --text-2: #b0b2b8;
+  --text-3: #7b7e85;
+  --line: rgba(255, 255, 255, 0.08);
+  --line-strong: rgba(255, 255, 255, 0.15);
+  --accent: #f4f4f5;
+  --accent-ink: #111113;
+  --accent-soft: #232327;
+  --accent-soft-2: #1c1c20;
+  --blush: #f3b9ad;
+  --blush-ink: #4a1f17;
+  --success: #6fd3a5;
+  --success-soft: #16291f;
+  --warn: #f1c27a;
+  --warn-soft: #2c2417;
+  --danger: #ff8d85;
+  --danger-soft: #331b1a;
+  --input-bg: #1f1f23;
+  --tab-bg: rgba(38, 38, 42, 0.9);
+  --scrim: rgba(0, 0, 0, 0.6);
+  --grad-brand: linear-gradient(#f4f4f5, #f4f4f5);
+  --grad-text: linear-gradient(#f4f4f5, #f4f4f5);
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.4), 0 12px 30px -18px rgba(0, 0, 0, 0.8);
+  --shadow-2: 0 24px 60px -24px rgba(0, 0, 0, 0.9);
+}
+
+/* Sin fondo animado ni destellos: el protagonismo es de las fotos. */
+.aurora, .sparkles, .stars { display: none !important; }
+body { background: var(--bg); }
+
+/* ─────────── Tipografía ─────────── */
+.page-head h1, .poster {
+  font-family: var(--font-poster); font-weight: 400; text-transform: uppercase;
+  font-size: 64px; line-height: 1.02; letter-spacing: 0.012em; padding-top: 0.06em;
+}
+.page-head h1 .serif, .page-head h1 .grad-text, .poster .serif { font-family: inherit; font-style: normal; font-size: 1em; line-height: inherit; letter-spacing: inherit; }
+.page-head h1[style] { font-size: 64px !important; }
+.grad-text { background: none; -webkit-background-clip: border-box; background-clip: border-box; color: inherit; animation: none; padding-right: 0; }
+.serif { letter-spacing: 0; }
+.section-head h2 { font-size: 20px; font-weight: 700; letter-spacing: -0.02em; }
+.eyebrow-chip { background: var(--card); box-shadow: var(--glass-edge); backdrop-filter: none; -webkit-backdrop-filter: none; color: var(--text-2); }
+.eyebrow-chip .dot { background: var(--accent-2); box-shadow: none; }
+
+/* ─────────── Superficies (sin cristal) ─────────── */
+.card, .list, .stat, .trip-card, .tl-card, .doc-card, .hero-trip, .map-wrap, .notice, .menu .list, .menu .cancel, .dialog,
+.chip, .seg, .pill, .day-pill, .icon-btn.filled, .btn.secondary {
+  backdrop-filter: none; -webkit-backdrop-filter: none;
+}
+.card, .list, .stat, .tl-card, .doc-card, .map-wrap, .menu .list, .menu .cancel, .dialog { background: var(--card); box-shadow: var(--shadow-1), var(--glass-edge); }
+.card, .list { border-radius: var(--r-lg); }
+.card.flat { background: var(--card-2); box-shadow: none; }
+.notice { background: var(--card); box-shadow: var(--glass-edge); }
+.notice.warn { background: var(--warn-soft); }
+.topbar { background: color-mix(in srgb, var(--bg) 82%, transparent); }
+nav.tabs[aria-label='Secciones del viaje']::before { background: color-mix(in srgb, var(--bg) 86%, transparent); }
+.tabs a.active { background: var(--accent); color: var(--accent-ink); }
+.sheet { background: var(--bg); backdrop-filter: none; -webkit-backdrop-filter: none; box-shadow: var(--shadow-2); }
+.toast { background: rgba(17, 17, 19, 0.92); border-radius: 999px; }
+.netbar { background: var(--blush); color: var(--blush-ink); }
+
+/* ─────────── Barra de pestañas flotante y oscura ─────────── */
+.tabbar {
+  left: 50%; right: auto; width: min(320px, calc(100% - 40px)); transform: translateX(-50%);
+  bottom: calc(14px + var(--sab)); height: 64px; padding: 8px; border-radius: 999px;
+  background: var(--tab-bg); box-shadow: 0 18px 40px -14px rgba(0, 0, 0, 0.55), inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+  backdrop-filter: saturate(1.4) blur(20px); -webkit-backdrop-filter: saturate(1.4) blur(20px);
+}
+:root[data-theme='dark'] .tabbar { background: var(--tab-bg); box-shadow: 0 18px 40px -14px rgba(0, 0, 0, 0.9), inset 0 0 0 1px rgba(255, 255, 255, 0.1); }
+.tabbar .tab-indicator { top: 8px; bottom: 8px; left: 8px; width: calc((100% - 16px) / 5); background: none; box-shadow: none; border-radius: 0; }
+.tabbar .tab-indicator::after {
+  content: ''; position: absolute; left: 50%; top: 50%; width: 48px; height: 48px; margin: -24px 0 0 -24px;
+  border-radius: 50%; background: #fff; box-shadow: 0 6px 16px -6px rgba(0, 0, 0, 0.5);
+}
+.tabbar a { color: rgba(255, 255, 255, 0.72); border-radius: 999px; gap: 0; }
+.tabbar a.active, :root[data-theme='dark'] .tabbar a.active { color: #111113; }
+.tabbar a svg { width: 22px; height: 22px; stroke-width: 1.8; }
+.tabbar a span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+@media (min-width: 900px) { .tabbar { width: 340px; bottom: 20px; } }
+
+/* ─────────── Botones ─────────── */
+.btn { border-radius: 999px; font-weight: 650; letter-spacing: -0.005em; }
+.btn:not(.secondary):not(.ghost):not(.danger) { background: var(--accent); color: var(--accent-ink); box-shadow: 0 10px 22px -14px rgba(0, 0, 0, 0.6); }
+.btn.secondary { background: var(--card); color: var(--text); box-shadow: inset 0 0 0 1px var(--line-strong); }
+.btn.ghost { color: var(--text); }
+.btn.ghost.strong { color: var(--text); font-weight: 750; }
+.icon-btn.filled { background: var(--card); box-shadow: inset 0 0 0 1px var(--line-strong); border-radius: 50%; color: var(--text); }
+.icon-btn.grad { background: var(--accent); color: var(--accent-ink); box-shadow: 0 10px 22px -12px rgba(0, 0, 0, 0.55); border-radius: 50%; }
+a.link, .link { color: var(--text); text-decoration: underline; text-decoration-color: var(--line-strong); text-underline-offset: 3px; }
+
+/* ─────────── Chips, segmentos, píldoras ─────────── */
+.chip { background: var(--card); box-shadow: inset 0 0 0 1px var(--line); }
+.chip[aria-pressed='true'], .chip.on { background: var(--accent); color: var(--accent-ink); box-shadow: none; }
+.seg { background: var(--bg-elev); box-shadow: none; border-radius: 999px; }
+.seg button { border-radius: 999px; }
+.seg button[aria-pressed='true'] { background: var(--card); box-shadow: 0 4px 12px -6px rgba(0, 0, 0, 0.3); color: var(--text); }
+.pill { background: var(--card-2); box-shadow: none; }
+.pill.accent { background: var(--blush); color: var(--blush-ink); }
+.pill.success { background: var(--success-soft); }
+.pill.warn { background: var(--warn-soft); }
+
+/* Iconos: pasteles suaves con trazo oscuro (más editorial que los degradados) */
+.icon-tile { border-radius: 50%; background: var(--accent-soft); color: var(--text); }
+.icon-tile[data-tone] { color: #1b1b1d; box-shadow: none; }
+.icon-tile[data-tone='coral'] { background: #f6cbc0; }
+.icon-tile[data-tone='violet'] { background: #d9dbf4; }
+.icon-tile[data-tone='sky'] { background: #cfe4ee; }
+.icon-tile[data-tone='mint'] { background: #d3ebdf; }
+.icon-tile[data-tone='amber'] { background: #f4e2bd; }
+.icon-tile[data-tone='pink'] { background: #f4d0d8; }
+.icon-tile[data-tone='slate'] { background: #e0e3e7; }
+:root[data-theme='dark'] .icon-tile[data-tone] { filter: saturate(0.9) brightness(0.92); }
+.ml-pin { background: #111113 !important; }
+.ml-pin[data-tone='accent'] { background: var(--accent-2) !important; }
+
+/* ─────────── Formularios ─────────── */
+.input, .select, .textarea { background: var(--input-bg); box-shadow: inset 0 0 0 1px var(--line-strong); border-radius: 16px; }
+.input:focus, .select:focus, .textarea:focus { box-shadow: inset 0 0 0 1.5px var(--text), 0 0 0 4px var(--accent-soft); }
+.check.on { background: var(--accent); color: var(--accent-ink); box-shadow: none; }
+.switch input:checked + span { background: var(--accent); }
+
+/* ─────────── Progreso, días, línea de tiempo ─────────── */
+.progress { background: var(--bg-elev); }
+.progress > div { background: var(--accent); }
+.progress > div::after { display: none; }
+.progress.over > div { background: var(--danger); }
+.ring .bar { stroke: var(--accent-2) !important; }
+.day-pill { background: var(--card); box-shadow: inset 0 0 0 1px var(--line); border-radius: 999px; }
+.day-pill[aria-pressed='true'] { background: var(--accent); color: color-mix(in srgb, var(--accent-ink) 75%, transparent); box-shadow: none; }
+.day-pill[aria-pressed='true'] .dnum { color: var(--accent-ink); }
+.day-pill[aria-pressed='true'] .dots i { background: var(--accent-ink); }
+.timeline::before { background: var(--line-strong); opacity: 1; }
+.stat::after { display: none; }
+.stat .val { font-weight: 750; }
+
+/* ─────────── Portadas con foto ─────────── */
+.cover.has-photo { background: #cfd3d8; }
+.cover.has-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.cover .credit { font-size: 10px; }
+
+/* Tarjeta de viaje: foto a sangre con el texto encima */
+.trip-card.photo-card { position: relative; display: block; border-radius: 28px; overflow: hidden; background: #1b1b1d; box-shadow: var(--shadow-2); color: #fff; isolation: isolate; }
+.trip-card.photo-card .cover { margin: 0; border-radius: 0; height: 236px; aspect-ratio: auto; }
+.trip-card.photo-card .shade { position: absolute; inset: 0; z-index: 1; background: linear-gradient(to top, rgba(0, 0, 0, 0.72) 0%, rgba(0, 0, 0, 0.2) 45%, rgba(0, 0, 0, 0) 70%); pointer-events: none; }
+.trip-card.photo-card .tag { position: absolute; z-index: 2; top: 14px; left: 14px; }
+.trip-card.photo-card .info { position: absolute; z-index: 2; left: 18px; right: 18px; bottom: 16px; display: flex; align-items: flex-end; gap: 12px; }
+.trip-card.photo-card h3 { color: #fff; font-size: 21px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.15; }
+.trip-card.photo-card .sub { color: rgba(255, 255, 255, 0.82); font-size: 13.5px; line-height: 1.35; margin-top: 2px; }
+.trip-card.photo-card .aside { margin-left: auto; text-align: right; flex: none; }
+.trip-card.photo-card .aside b { display: block; font-size: 19px; font-weight: 750; letter-spacing: -0.02em; }
+.trip-card.photo-card .aside small { color: rgba(255, 255, 255, 0.78); font-size: 12px; }
+.trip-card.photo-card .cover.fallback ~ .shade { background: linear-gradient(to top, rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0) 55%); }
+.trip-card.photo-card .cover.fallback .ticket-wrap { transform: translateY(-22px) scale(0.92); }
+.hscroll .trip-card.photo-card .cover { height: 210px; }
+.tag-blush { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 999px; background: var(--blush); color: var(--blush-ink); font-size: 12.5px; font-weight: 650; box-shadow: 0 6px 14px -8px rgba(0, 0, 0, 0.35); }
+.glass-circle {
+  position: absolute; z-index: 3; top: 12px; right: 12px; width: 38px; height: 38px; display: grid; place-items: center;
+  border-radius: 50%; border: 0; color: #fff; background: rgba(255, 255, 255, 0.22); cursor: pointer;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.45); backdrop-filter: blur(10px) saturate(1.4); -webkit-backdrop-filter: blur(10px) saturate(1.4);
+}
+.glass-circle svg { width: 18px; height: 18px; }
+.trip-card + .icon-btn { display: none; }
+
+/* Héroe del próximo viaje (Inicio) */
+.hero-trip { border-radius: 30px; background: var(--card); box-shadow: var(--shadow-2); overflow: hidden; }
+.hero-trip > div:first-child { padding: 0; }
+.hero-trip .cover, .hero-trip .cover.fallback { border-radius: 0; aspect-ratio: 4 / 3.6; height: auto; }
+.hero-trip .overlay, .hero-trip.no-photo .overlay { position: absolute; left: 0; right: 0; bottom: 0; top: auto; border-radius: 0; padding: 70px 20px 18px; color: #fff;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.72), rgba(0, 0, 0, 0)); }
+.hero-trip .overlay h2, .hero-trip.no-photo > .overlay h2 { color: #fff; font-size: 27px; font-weight: 750; letter-spacing: -0.025em; }
+.hero-trip .overlay .sub, .hero-trip.no-photo > .overlay .sub { color: rgba(255, 255, 255, 0.85); }
+.hero-trip .float-chip { background: var(--blush); color: var(--blush-ink); border-radius: 999px; box-shadow: 0 8px 18px -10px rgba(0, 0, 0, 0.45); backdrop-filter: none; -webkit-backdrop-filter: none; animation: none; padding: 7px 13px; }
+.hero-trip .float-chip.a { top: 16px; left: 16px; right: auto; }
+.hero-trip .float-chip.b { top: 16px; right: 16px; background: rgba(255, 255, 255, 0.22); color: #fff; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.45); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+.hero-trip .countdown { padding: 10px; gap: 8px; }
+.hero-trip .countdown > div { background: var(--card-2); box-shadow: none; border-radius: 22px; }
+.hero-trip .countdown .big { font-family: var(--font-poster); font-weight: 400; font-size: 52px; line-height: 1; letter-spacing: 0.01em; }
+.hero-trip.no-photo .cover.fallback .ticket-wrap { transform: translateY(-36px) scale(0.95); }
+
+/* Cabecera de Inicio: avatar, fecha y botón de crear */
+.home-top { display: flex; align-items: center; gap: 10px; margin-top: 4px; }
+.home-avatar { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; flex: none; font-weight: 750; font-size: 17px; color: var(--blush-ink); background: var(--blush); box-shadow: inset 0 0 0 2px var(--card); text-decoration: none; }
+.home-top .eyebrow-chip { margin-right: auto; }
+
+/* ─────────── Bienvenida a pantalla completa ─────────── */
+.welcome-hero {
+  position: relative; margin: calc(-1 * (var(--sat) + 8px)) calc(-1 * var(--gutter)) 0; min-height: calc(100dvh - 96px - var(--sab));
+  border-radius: 0 0 36px 36px; overflow: hidden; color: #fff; display: flex; flex-direction: column; background: #1a1d22;
+}
+.welcome-hero > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 30%; }
+.welcome-hero::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(0, 0, 0, 0.05) 0%, rgba(0, 0, 0, 0) 35%, rgba(0, 0, 0, 0.55) 62%, rgba(0, 0, 0, 0.9) 100%); }
+.welcome-hero > * { position: relative; z-index: 1; }
+.welcome-logo { margin: calc(var(--sat) + 26px) auto 0; width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; background: var(--blush); color: var(--blush-ink); }
+.welcome-logo svg { width: 20px; height: 20px; }
+.welcome-title { font-family: var(--font-poster); font-weight: 400; text-transform: uppercase; text-align: center; font-size: clamp(118px, 40vw, 190px); line-height: 0.95; letter-spacing: 0.02em; margin-top: 10px; color: #fff; text-shadow: 0 10px 40px rgba(0, 0, 0, 0.25); }
+.welcome-body { margin-top: auto; padding: 0 24px 26px; }
+.welcome-body .kicker { font-size: 13px; color: rgba(255, 255, 255, 0.8); }
+.welcome-body h2 { color: #fff; font-size: 34px; font-weight: 650; letter-spacing: -0.03em; line-height: 1.08; margin-top: 6px; }
+.welcome-body p { color: rgba(255, 255, 255, 0.78); margin-top: 10px; font-size: 15px; line-height: 1.45; }
+.welcome-body .btn { margin-top: 22px; min-height: 54px; }
+.welcome-body .btn.start { background: rgba(255, 255, 255, 0.08) !important; color: #fff !important; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.55) !important; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+.welcome-body .restore { display: block; text-align: center; margin-top: 14px; color: rgba(255, 255, 255, 0.82); font-size: 14px; text-decoration: underline; text-underline-offset: 3px; }
+.welcome-body .credit { display: block; margin-top: 14px; text-align: center; font-size: 10px; color: rgba(255, 255, 255, 0.5); }
+
+/* ─────────── Retoques varios ─────────── */
+.hero-trip .float-chip svg { color: currentColor; }
+.quick-actions button, .quick-actions a { background: var(--card); box-shadow: var(--shadow-1), var(--glass-edge); backdrop-filter: none; -webkit-backdrop-filter: none; border-radius: 22px; }
+.wday.today { background: var(--accent); }
+.world-title { font-family: var(--font-poster); font-weight: 400; text-transform: uppercase; font-size: 34px; letter-spacing: 0.02em; line-height: 1; padding: 6px 14px 4px; }
+.world-title .serif { font-family: inherit; font-style: normal; }
+.world-title .tiny { font-family: var(--font); text-transform: none; }
+.world-teaser .wt-title, .world-teaser h2 { font-family: var(--font-poster); font-weight: 400; text-transform: uppercase; letter-spacing: 0.02em; }
+
+/* Ajustes tras revisión */
+.welcome-hero::after { background: linear-gradient(to bottom, rgba(0, 0, 0, 0.08) 0%, rgba(0, 0, 0, 0) 28%, rgba(0, 0, 0, 0.45) 46%, rgba(0, 0, 0, 0.82) 62%, rgba(0, 0, 0, 0.94) 100%); }
+.trip-title { font-size: 52px; line-height: 0.98; overflow-wrap: anywhere; }
+.wt-title { font-family: var(--font-poster); font-weight: 400; text-transform: uppercase; font-size: 52px; line-height: 0.95; letter-spacing: 0.02em; margin: 4px 0 6px; }
+.wt-title .serif { font-family: inherit; font-style: normal; }
+.world-teaser { border-radius: 28px; }
+.welcome-hero::after { background: linear-gradient(to bottom, rgba(0, 0, 0, 0.1) 0%, rgba(0, 0, 0, 0) 20%, rgba(0, 0, 0, 0.5) 36%, rgba(0, 0, 0, 0.86) 52%, rgba(0, 0, 0, 0.95) 100%); }
+.welcome-hero { min-height: calc(100dvh - 104px - var(--sab)); }
+.welcome-title { text-shadow: 0 8px 30px rgba(0, 0, 0, 0.35); }
+:root[data-theme='dark'] { --tab-bg: rgba(48, 48, 53, 0.92); }
+.welcome-hero > img { z-index: 0; }
+.welcome-hero::after { z-index: 0; }
+/* Tarjeta de embarque sobre la foto del viaje */
+.cover .ticket-over { position: absolute; z-index: 1; left: 4%; right: 30%; bottom: -2%; height: 64%; pointer-events: none; transform: rotate(-3deg); filter: drop-shadow(0 14px 22px rgba(0, 0, 0, 0.35)); }
+.cover .ticket-over .ticket-art { width: 100%; height: 100%; }
+.trip-cover { position: relative; overflow: hidden; }
+.trip-cover::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to top, rgba(0, 0, 0, 0.28), rgba(0, 0, 0, 0) 45%); pointer-events: none; }
+.trip-cover .credit { z-index: 2; }
+.welcome-body h1.kicker { font-size: 14px; font-weight: 600; letter-spacing: 0; color: rgba(255, 255, 255, 0.85); }
+.cover .ticket-over { left: 3%; right: 14%; bottom: -10%; height: 86%; }
+.trip-cover .credit { top: 10px; bottom: auto; right: 12px; left: auto; max-width: 70%; }

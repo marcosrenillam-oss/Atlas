@@ -1,23 +1,68 @@
+import { useState } from 'react';
 import type { Trip } from '../domain/types';
 import { useFileUrl } from '../files/files';
 import { PlaneMini, TicketArt } from './TicketArt';
+import photos from './cover-photos.json';
 
-/** Portada: foto del usuario o, si no hay, un fondo neutro con curvas de nivel e iniciales. Nunca fotos inventadas. */
+/**
+ * Portada: la foto del usuario; si no hay, una foto real (Wikimedia Commons) del monumento del país
+ * de destino; y si no hay foto o no hay conexión, el avión con los billetes. Nunca imágenes inventadas.
+ */
 type CoverTrip = Pick<Trip, 'name' | 'cover' | 'stages'> & Partial<Pick<Trip, 'origin' | 'startDate' | 'travelers'>>;
 
-export function Cover({ trip, className, style, showCredit, mini }: { trip: CoverTrip; className?: string; style?: React.CSSProperties; showCredit?: boolean; mini?: boolean }) {
+const PHOTOS = photos as { byCountry: Record<string, string>; byName: Record<string, string>; credit: Record<string, string> };
+const norm = (s: string) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+
+/** Foto de destino para un viaje (id de public/world/<id>.jpg) o null. */
+export function destinationPhoto(trip: Pick<Trip, 'name' | 'stages'>): string | null {
+  for (const st of trip.stages) {
+    const id = (st.countryCode && PHOTOS.byCountry[st.countryCode.toUpperCase()]) || PHOTOS.byName[norm(st.name)] || (st.country && PHOTOS.byName[norm(st.country)]);
+    if (id) return id;
+  }
+  return PHOTOS.byName[norm(trip.name.replace(/^(viaje|escapada|ruta) (a|por) /i, ''))] ?? null;
+}
+
+export function Cover({ trip, className, style, showCredit, mini, ticket }: { trip: CoverTrip; className?: string; style?: React.CSSProperties; showCredit?: boolean; mini?: boolean; ticket?: boolean }) {
   const url = useFileUrl(trip.cover?.fileId);
   const label = trip.stages[0]?.name || trip.name;
+  const photoId = url ? null : destinationPhoto(trip);
+  const [failed, setFailed] = useState<string | null>(null);
+  const dest = photoId && failed !== photoId ? photoId : null;
   return (
-    <div className={`cover${url ? '' : ' fallback'} ${className ?? ''}`} style={style}>
+    <div className={`cover${url || dest ? ' has-photo' : ' fallback'} ${className ?? ''}`} style={style}>
       {url ? (
         <>
           <img src={url} alt="" loading="lazy" decoding="async" />
           {showCredit && trip.cover?.credit && <span className="credit">{trip.cover.credit}</span>}
+          {ticket && <TicketOverlay trip={trip} label={label} />}
+        </>
+      ) : dest ? (
+        <>
+          <img src={`${import.meta.env.BASE_URL}world/${dest}.jpg`} alt="" loading="lazy" decoding="async" onError={() => setFailed(dest)} />
+          {showCredit && <span className="credit">Foto: {PHOTOS.credit[dest]}</span>}
+          {ticket && <TicketOverlay trip={trip} label={label} />}
         </>
       ) : (
         <CoverFallback label={label} trip={trip} mini={mini} />
       )}
+    </div>
+  );
+}
+
+/** Tarjeta de embarque (origen → destino) superpuesta a la foto de portada. */
+function TicketOverlay({ trip, label }: { trip: CoverTrip; label: string }) {
+  const [base] = paletteFor(label);
+  return (
+    <div className="ticket-over" aria-hidden="true">
+      <TicketArt
+        from={trip.origin ?? ''}
+        to={trip.stages.find((x) => x.name.trim())?.name || trip.name || label}
+        extra={Math.max(0, trip.stages.filter((x) => x.name.trim()).length - 1)}
+        date={trip.startDate}
+        travelers={trip.travelers}
+        accent={darken(base)}
+        bg={base}
+      />
     </div>
   );
 }

@@ -2,6 +2,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import './styles/app.css';
 import './styles/aurora.css';
+import './styles/routemind.css';
 import { App } from './app/App';
 import { ensureSeed } from './data/seed';
 import { startSync } from './sync/engine';

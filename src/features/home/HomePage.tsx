@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { ChevronRight, Compass, Download, ListTodo, Map as MapIcon, Plus, Users, Wallet, WalletCards } from 'lucide-react';
+import { ChevronRight, Compass, Download, ListTodo, Plane, UserRound, Map as MapIcon, Plus, Users, Wallet, WalletCards } from 'lucide-react';
 import { useTrips, type TripWithStatus } from '../../data/queries';
 import { useProfile } from '../../data/settings';
 import { db } from '../../data/db';
@@ -68,9 +68,23 @@ export function HomePage() {
 
   if (ongoing[0]) return <TripModeHome trip={ongoing[0]} name={name} now={now} />;
 
+  if (isEmpty) {
+    return (
+      <main className="page">
+        <Welcome onCreate={() => setCreating(true)} name={name} />
+        {!name && <Link to="/perfil" className="card link row small" style={{ marginTop: 16 }}><span className="grow muted">Dinos tu nombre para personalizar el saludo.</span><ChevronRight className="chev" /></Link>}
+        <div className="notice small" style={{ marginTop: 12 }}>
+          Consejo: en iPhone, abre ATLAS en Safari y usa «Compartir › Añadir a pantalla de inicio» para instalarla y que tus datos se conserven de forma estable.
+        </div>
+        {creating && <TripForm open onClose={() => setCreating(false)} onSaved={(id) => nav(`/viajes/${id}`)} />}
+      </main>
+    );
+  }
+
   return (
     <main className="page stagger">
-      <div className="row-between" style={{ marginTop: 4 }}>
+      <div className="home-top">
+        <Link to="/perfil" className="home-avatar" aria-label="Tu perfil">{name ? name.charAt(0).toUpperCase() : <UserRound size={20} />}</Link>
         <span className="eyebrow-chip"><span className="dot" />{capitalize(fmt.weekday(toISODate(now)))}</span>
         <button className="icon-btn grad" aria-label="Crear viaje" onClick={() => setCreating(true)}><Plus /></button>
       </div>
@@ -83,7 +97,7 @@ export function HomePage() {
       <div style={{ marginTop: -6, marginBottom: 20 }}><SyncBadge /></div>
 
       {isEmpty ? (
-        <Welcome onCreate={() => setCreating(true)} hasName={!!name} />
+        null
       ) : (
         <>
           {featured ? <FeaturedTrip trip={featured} now={now} /> : (
@@ -208,14 +222,13 @@ function FeaturedTrip({ trip, now }: { trip: TripWithStatus; now: Date }) {
     ringSub = total ? `${prep!.done} de ${total} listo` : 'añade tareas o equipaje';
   }
   return (
-    <Link to={`/viajes/${trip.id}`} className={`hero-trip${trip.cover ? '' : ' no-photo'}`} aria-label={`Próximo viaje: ${trip.name}`}>
+    <Link to={`/viajes/${trip.id}`} className="hero-trip" aria-label={`Próximo viaje: ${trip.name}`}>
       <div style={{ position: 'relative' }}>
         <Cover trip={trip} />
-        <span className="float-chip a"><StatusDot status={trip.status} /> {ongoing ? 'En curso' : trip.status === 'proximo' ? 'Próximo' : 'En preparación'}</span>
-        {trip.cover && <span className="float-chip b"><Users /> <span className="big">{trip.travelers}</span> {trip.travelers === 1 ? 'viajero' : 'viajeros'}</span>}
-        {trip.cover && <HeroTitle trip={trip} len={len} />}
+        <span className="float-chip a">{ongoing ? 'En curso' : trip.status === 'proximo' ? 'Próximo' : 'En preparación'}</span>
+        <span className="float-chip b"><Users /> <span className="big">{trip.travelers}</span></span>
+        <HeroTitle trip={trip} len={len} />
       </div>
-      {!trip.cover && <HeroTitle trip={trip} len={len} />}
       <div className="countdown">
         <div>
           <div className="big">{big}</div>
@@ -244,11 +257,6 @@ function HeroTitle({ trip, len }: { trip: TripWithStatus; len: number | null }) 
   );
 }
 
-function StatusDot({ status }: { status: TripWithStatus['status'] }) {
-  const c = status === 'en-curso' ? '#0f9f8a' : status === 'proximo' ? '#1e7bd8' : '#f08a4b';
-  return <span style={{ width: 8, height: 8, borderRadius: 4, background: c, boxShadow: `0 0 0 3px ${c}33` }} />;
-}
-
 function HomeTask({ task, tripName }: { task: Task; tripName: string }) {
   return (
     <div className="list-row">
@@ -261,25 +269,22 @@ function HomeTask({ task, tripName }: { task: Task; tripName: string }) {
   );
 }
 
-function Welcome({ onCreate, hasName }: { onCreate: () => void; hasName: boolean }) {
+/** Bienvenida a pantalla completa (primera vez, sin viajes). */
+function Welcome({ onCreate, name }: { onCreate: () => void; name: string }) {
   return (
-    <div className="stack-lg">
-      <div className="card stack" style={{ padding: 22 }}>
-        <div className="icon-tile lg"><Compass /></div>
-        <div>
-          <h2 style={{ fontSize: 22, fontWeight: 700 }}>Tu centro de control de viajes</h2>
-          <p className="muted" style={{ marginTop: 6 }}>
-            Organiza itinerarios, gastos compartidos, documentos y equipaje. Todo se guarda en este dispositivo y funciona sin conexión.
-          </p>
-        </div>
-        <button className="btn block" onClick={onCreate}><Plus /> Crear mi primer viaje</button>
-        <Link to="/perfil" className="btn secondary block"><Download /> Restaurar una copia de seguridad</Link>
+    <section className="welcome-hero" aria-label="Bienvenida">
+      <img src={`${import.meta.env.BASE_URL}welcome.jpg`} alt="" />
+      <div className="welcome-logo" aria-hidden="true"><Plane /></div>
+      <div className="welcome-title" aria-hidden="true">Atlas</div>
+      <div className="welcome-body">
+        <h1 className="kicker">{name ? `Hola, ${name}` : 'Bienvenido a ATLAS'}</h1>
+        <h2>Tu aventura empieza aquí</h2>
+        <p>Planifica rutas, reparte gastos y lleva tus documentos contigo. Todo en tu iPhone, también sin conexión.</p>
+        <button className="btn block start" onClick={onCreate}>Crear mi primer viaje</button>
+        <Link to="/perfil" className="restore"><Download size={14} style={{ verticalAlign: '-2px' }} /> Restaurar una copia de seguridad</Link>
+        <span className="credit">Cervino · Foto: chil (Camptocamp.org) · CC BY-SA 3.0 · Wikimedia Commons</span>
       </div>
-      {!hasName && <Link to="/perfil" className="card link row small"><span className="grow muted">Dinos tu nombre para personalizar el saludo.</span><ChevronRight className="chev" /></Link>}
-      <div className="notice small">
-        Consejo: en iPhone, abre ATLAS en Safari y usa «Compartir › Añadir a pantalla de inicio» para instalarla y que tus datos se conserven de forma estable.
-      </div>
-    </div>
+    </section>
   );
 }
 

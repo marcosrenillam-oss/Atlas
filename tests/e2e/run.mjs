@@ -106,7 +106,7 @@ async function createTrip(page, { name, stages, start, end, companions = [], bud
 
   await step('Carga inicial, Service Worker activo y bienvenida', async () => {
     await page.goto(BASE);
-    await page.getByText('Tu centro de control de viajes').waitFor();
+    await page.getByRole('heading', { name: 'Tu aventura empieza aquí' }).waitFor();
     await page.evaluate(async () => { await navigator.serviceWorker.ready; });
     // Espera a que el SW controle la página (tras el primer registro).
     await page.reload();
@@ -508,7 +508,7 @@ async function createTrip(page, { name, stages, start, end, companions = [], bud
     await E.page.getByRole('button', { name: 'Borrar todos los datos' }).click();
     await E.page.getByRole('alertdialog').getByRole('button', { name: 'Continuar' }).click();
     await E.page.getByRole('alertdialog').getByRole('button', { name: 'Borrar todo' }).click();
-    await E.page.getByText('Tu centro de control de viajes').waitFor();
+    await E.page.getByRole('heading', { name: 'Tu aventura empieza aquí' }).waitFor();
     await E.ctx.close();
   });
 
