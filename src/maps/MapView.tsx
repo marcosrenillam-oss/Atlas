@@ -61,16 +61,17 @@ export function MapView(props: MapViewProps) {
   if (failed || !cached) {
     return (
       <div className="map-wrap map-offline stack-sm">
-        <div className="notice warn small" style={{ margin: 0 }}>
-          {online ? 'No se pudo cargar la cartografía.' : 'Sin conexión y sin mapa guardado de esta zona.'} Se muestran tus lugares guardados en un plano local con sus coordenadas.
-        </div>
+        {online && (
+          <div className="notice warn small" style={{ margin: 0 }}>
+            No se pudo cargar la cartografía. Se muestran tus lugares guardados en un plano local con sus coordenadas.
+          </div>
+        )}
         <OfflinePlot markers={props.markers} route={props.route} />
       </div>
     );
   }
   return (
     <Suspense fallback={<div className="map-wrap"><div className={`map ${props.className ?? ''} map-loading`} /></div>}>
-      {!online && <div className="map-offline-note small">Sin conexión · se ven las zonas que ya abriste</div>}
       <VectorMap {...props} onFail={() => setFailed(true)} />
     </Suspense>
   );

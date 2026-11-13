@@ -11,14 +11,12 @@ import { PLACE_TONE } from '../../ui/tones';
 import { Empty } from '../../ui/Empty';
 import { PlaceForm } from '../places/PlaceForm';
 import { PlaceDetail } from '../places/PlaceDetail';
-import { useOnline } from '../../app/hooks';
 
 const norm = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 
 export function ExplorePage() {
   const places = usePlaces('all');
   const trips = useTrips() ?? [];
-  const online = useOnline();
   const [scope, setScope] = useState<string>('all'); // all | general | tripId
   const [cat, setCat] = useState<PlaceCategory | 'all'>('all');
   const [q, setQ] = useState('');
@@ -65,7 +63,7 @@ export function ExplorePage() {
         <div className="stack">
           <MapView markers={[]} onPick={(p) => setForm({ point: p })} onSavePoi={(poi) => setForm({ point: poi.point, name: poi.name, category: poi.category })} />
           <div className="card">
-            <Empty icon={Compass} title="Guarda tus lugares" text={online ? 'Busca un sitio o toca el mapa para guardarlo. Luego podrás añadirlo a cualquier itinerario.' : 'Sin conexión puedes guardar lugares con coordenadas o tu ubicación actual.'}
+            <Empty icon={Compass} title="Guarda tus lugares" text="Busca un sitio o toca el mapa para guardarlo. Luego podrás añadirlo a cualquier itinerario."
               action={<button className="btn" onClick={() => setForm({})}><Plus /> Añadir lugar</button>} />
           </div>
         </div>

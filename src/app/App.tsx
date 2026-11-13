@@ -2,7 +2,6 @@ import { lazy, Suspense, useEffect, useRef } from 'react';
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 import { TabBar } from './TabBar';
-import { NetBar } from './NetBar';
 import { applyTheme, watchSystemTheme } from './theme';
 import { useProfile } from '../data/settings';
 import { UIProvider, useUI } from '../ui/UIProvider';
@@ -119,7 +118,6 @@ export function App() {
         <AutoUpdate />
         <ScrollToTop />
         <OfflinePack />
-        <NetBar />
         <div className="shell">
           <Routes>
             <Route path="/" element={<HomePage />} />

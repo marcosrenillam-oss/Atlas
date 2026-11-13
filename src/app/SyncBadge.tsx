@@ -7,8 +7,10 @@ export function SyncBadge() {
   let dot = 'status-dot';
   let text: string;
   if (!s.online) {
+    // Sin conexión no se avisa (ya se sabe): solo se indica si hay cambios esperando a sincronizar.
+    if (s.phase === 'disabled' || !s.pending) return null;
     dot += ' off';
-    text = s.phase === 'disabled' ? t('sync.offline') : `${t('sync.offline')}${s.pending ? ` · ${s.pending} ${t('sync.pending')}` : ''}`;
+    text = `${s.pending} ${t('sync.pending')}`;
   } else if (s.phase === 'disabled') {
     dot += ' idle';
     text = `${t('sync.online')} · ${t('sync.local')}`;

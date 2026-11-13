@@ -356,7 +356,8 @@ async function createTrip(page, { name, stages, start, end, companions = [], bud
   await step('Modo avión: abrir, consultar, crear y editar sin conexión', async () => {
     await ctx.setOffline(true);
     await p().goto(BASE);
-    await p().getByText('Sin conexión · tus cambios se guardan en el dispositivo').waitFor();
+    await p().getByRole('link', { name: 'Próximo viaje: Escapada a Lisboa' }).waitFor();
+    assert.equal(await p().getByText(/Sin conexión/).count(), 0, 'no debe haber avisos de «sin conexión»');
     await p().getByRole('link', { name: 'Próximo viaje: Escapada a Lisboa' }).click();
     await tab(p(), 'Documentos');
     await p().getByRole('button', { name: 'Abrir billete-vuelo' }).click();
@@ -364,7 +365,6 @@ async function createTrip(page, { name, stages, start, end, companions = [], bud
     await p().locator('.viewer').getByRole('button', { name: 'Cerrar' }).click();
     await tab(p(), 'Mapa');
     // el mapa de este viaje ya se abrió con conexión: se ve el mapa guardado, no el plano
-    await p().getByText('Sin conexión · se ven las zonas que ya abriste').waitFor();
     await p().locator('.map canvas').waitFor({ timeout: 30000 });
     await shot(p(), '13-offline-mapa');
     await tab(p(), 'Gastos');
@@ -397,7 +397,6 @@ async function createTrip(page, { name, stages, start, end, companions = [], bud
     await ctx.setOffline(false);
     await p().goto(BASE);
     await p().getByText(/Conectado · Solo en este dispositivo/).waitFor();
-    assert.equal(await p().getByText('Sin conexión · tus cambios').count(), 0);
   });
 
   let backupPath;
@@ -464,7 +463,7 @@ async function createTrip(page, { name, stages, start, end, companions = [], bud
     await p().getByLabel('Nueva tarea').press('Enter');
     await p().getByText('Comprar tarjeta Viva Viagem').waitFor();
     await p().goto(BASE);
-    await p().getByText(/Sin conexión · \d+ cambios pendientes/).waitFor();
+    await p().getByText(/^\s*\d+ cambios pendientes/).waitFor();
     await shot(p(), '15-pendientes');
     await ctx.setOffline(false);
     await p().getByText(/Sincronizado \d\d:\d\d/).waitFor({ timeout: 20000 });
@@ -675,7 +674,8 @@ async function createTrip(page, { name, stages, start, end, companions = [], bud
     await imgOk('.trip-cover img');
     await pg.goto(`${BASE}/explorar`);
     await imgOk('.wt-img');
-    await pg.getByText('Sin conexión · se ven las zonas que ya abriste').waitFor();
+    await pg.locator('.map canvas').waitFor({ timeout: 30000 });
+    assert.equal(await pg.getByText(/Sin conexión/).count(), 0, 'no debe haber avisos de «sin conexión»');
     assert.equal(await pg.locator('.map-offline').count(), 0, 'sin conexión debería verse el mapa guardado, no el plano');
     await pg.waitForFunction(() => document.querySelector('.map')?.__map?.isStyleLoaded(), null, { timeout: 30000 });
     await pg.evaluate(lisboa);
