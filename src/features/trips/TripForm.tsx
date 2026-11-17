@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import { ImagePlus, Loader2, MapPin, Plus, Search, Trash2, X } from 'lucide-react';
+import { ImagePlus, Images, Loader2, MapPin, Plus, Trash2, X } from 'lucide-react';
+import { CoverPicker } from './CoverPicker';
 import { Sheet } from '../../ui/Sheet';
 import { Field, Segmented, Stepper } from '../../ui/Controls';
 import { MoneyInput } from '../../ui/MoneyInput';
@@ -13,7 +14,7 @@ import { uid } from '../../lib/id';
 import { remove, save, storeFile, update } from '../../data/repo';
 import { useProfile } from '../../data/settings';
 import { compressImage } from '../../files/files';
-import { searchPlaces, wikipediaImage } from '../../maps/geocode';
+import { searchPlaces } from '../../maps/geocode';
 import { requestPersistence, useOnline } from '../../app/hooks';
 
 interface Draft {
@@ -64,6 +65,7 @@ export function TripForm({ open, onClose, trip, onSaved, initialDestination }: {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [companion, setCompanion] = useState('');
   const [busy, setBusy] = useState<string | null>(null);
+  const [picking, setPicking] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
   const createdCover = useRef<string | null>(null);
   const editing = !!trip;
@@ -147,21 +149,6 @@ export function TripForm({ open, onClose, trip, onSaved, initialDestination }: {
     const f = await storeFile(await compressImage(blob, 1800), name, trip?.id ?? null);
     createdCover.current = f.id;
     set('cover', { fileId: f.id, credit, creditUrl });
-  }
-
-  async function findPhoto() {
-    const q = d.stages.find((s) => s.name.trim())?.name || d.name;
-    if (!q.trim()) return ui.toast('Escribe primero un destino.', { kind: 'error' });
-    setBusy('photo');
-    try {
-      const r = await wikipediaImage(q);
-      if (!r) ui.toast(`No hay foto en Wikipedia para «${q}». Puedes subir una tuya.`);
-      else await setCoverBlob(r.blob, `${q}.jpg`, r.credit, r.url);
-    } catch (e) {
-      ui.toast((e as Error).message, { kind: 'error' });
-    } finally {
-      setBusy(null);
-    }
   }
 
   async function locateStage(i: number) {
@@ -322,14 +309,31 @@ export function TripForm({ open, onClose, trip, onSaved, initialDestination }: {
             <button type="button" className="btn secondary sm" onClick={() => fileInput.current?.click()} disabled={!!busy}>
               <ImagePlus /> Subir foto
             </button>
-            <button type="button" className="btn secondary sm" onClick={() => void findPhoto()} disabled={!online || !!busy} title={online ? '' : 'Necesita conexión'}>
-              {busy === 'photo' ? <Loader2 className="spin" /> : <Search />} Buscar en Wikipedia
+            <button type="button" className="btn secondary sm" onClick={() => setPicking(true)} disabled={!!busy}>
+              <Images /> Elegir foto
             </button>
           </div>
           {!d.cover && (
             <Cover trip={{ name: d.name, stages: d.stages, origin: d.origin, startDate: d.startDate || undefined, travelers: d.travelers }} style={{ aspectRatio: '16/9', borderRadius: 18 }} />
           )}
-          <span className="hint">{d.cover ? '' : 'Sin foto, la portada es este billete con tu origen y destino. '}La foto se guarda en el dispositivo y se ve sin conexión.{!online && ' La búsqueda en Wikipedia necesita conexión.'}</span>
+          <span className="hint">{d.cover ? '' : 'Sin elegir, la portada es la foto del país con tu billete de origen y destino. '}La foto se guarda en el dispositivo y se ve sin conexión.</span>
+          {picking && (
+            <CoverPicker
+              open
+              trip={{ name: d.name, stages: d.stages }}
+              onClose={() => setPicking(false)}
+              onPick={async (c) => {
+                try {
+                  const r = await fetch(c.full);
+                  if (!r.ok) throw new Error();
+                  await setCoverBlob(await r.blob(), `${d.stages[0]?.name || d.name || 'portada'}.jpg`, c.credit, c.page);
+                } catch {
+                  ui.toast('No se pudo descargar esa foto. Prueba con otra.', { kind: 'error' });
+                  throw new Error('descarga');
+                }
+              }}
+            />
+          )}
           <input ref={fileInput} type="file" accept="image/*" hidden onChange={(e) => {
             const f = e.target.files?.[0];
             if (f) void setCoverBlob(f, f.name);

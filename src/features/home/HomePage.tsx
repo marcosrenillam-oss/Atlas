@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { ChevronRight, Compass, Download, ListTodo, Plane, UserRound, Map as MapIcon, Plus, Users, Wallet, WalletCards } from 'lucide-react';
+import { ArrowLeftRight, ChevronRight, Compass, Download, ListTodo, Plane, UserRound, Map as MapIcon, Plus, Users, Wallet, WalletCards } from 'lucide-react';
 import { useTrips, type TripWithStatus } from '../../data/queries';
 import { useProfile } from '../../data/settings';
 import { db } from '../../data/db';
@@ -20,6 +20,7 @@ import { TripCard, TripRow, destinationsLabel } from '../trips/TripCard';
 import { TripForm } from '../trips/TripForm';
 import { ItineraryTab } from '../trip/ItineraryTab';
 import { QuickExpense } from '../trip/QuickExpense';
+import { CurrencyConverter } from '../trip/CurrencyConverter';
 import { WalletSheet, useWalletDocs } from '../trip/Wallet';
 import { enrichTrip } from '../../services/geo';
 
@@ -291,6 +292,8 @@ function Welcome({ onCreate, name }: { onCreate: () => void; name: string }) {
 function TripModeHome({ trip, name, now }: { trip: TripWithStatus; name: string; now: Date }) {
   const [quick, setQuick] = useState(false);
   const [wallet, setWallet] = useState(false);
+  const [convert, setConvert] = useState(false);
+  const homeCur = useProfile().currency;
   const walletDocs = useWalletDocs(trip.id) ?? [];
   const len = tripLength(trip);
   const n = trip.startDate ? diffDays(trip.startDate, today()) + 1 : null;
@@ -324,6 +327,7 @@ function TripModeHome({ trip, name, now }: { trip: TripWithStatus; name: string;
           <div className="icon-tile" data-tone="violet"><WalletCards /></div>Cartera
           {walletDocs.length > 0 && <span className="badge">{walletDocs.length}</span>}
         </button>
+        <button onClick={() => setConvert(true)}><div className="icon-tile" data-tone="amber"><ArrowLeftRight /></div>Divisas</button>
         <Link to={`/viajes/${trip.id}`}><div className="icon-tile" data-tone="sky"><MapIcon /></div>Ver viaje</Link>
       </div>
       <section className="section" style={{ marginTop: 22 }}>
@@ -331,6 +335,7 @@ function TripModeHome({ trip, name, now }: { trip: TripWithStatus; name: string;
       </section>
       {quick && <QuickExpense trip={trip} onClose={() => setQuick(false)} />}
       {wallet && <WalletSheet trip={trip} onClose={() => setWallet(false)} />}
+      {convert && <CurrencyConverter trip={trip} home={homeCur} onClose={() => setConvert(false)} />}
     </main>
   );
 }
