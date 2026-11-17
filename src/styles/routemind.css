@@ -291,3 +291,12 @@ a.link, .link { color: var(--text); text-decoration: underline; text-decoration-
 .welcome-body h1.kicker { font-size: 14px; font-weight: 600; letter-spacing: 0; color: rgba(255, 255, 255, 0.85); }
 .cover .ticket-over { left: 3%; right: 14%; bottom: -10%; height: 86%; }
 .trip-cover .credit { top: 10px; bottom: auto; right: 12px; left: auto; max-width: 70%; }
+
+/* Bienvenida: capa a pantalla completa (detrás de la hora y el notch, sin barra de pestañas) */
+.welcome-hero {
+  position: fixed; inset: 0; z-index: 60; margin: 0; min-height: 0; border-radius: 0;
+}
+.welcome-body { padding: 0 24px calc(28px + var(--sab)); max-width: 560px; width: 100%; margin-left: auto; margin-right: auto; }
+.welcome-logo { margin-top: calc(var(--sat) + 22px); }
+.welcome-links { display: flex; justify-content: center; gap: 22px; margin-top: 14px; }
+.welcome-links .restore { margin-top: 0; }

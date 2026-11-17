@@ -72,10 +72,6 @@ export function HomePage() {
     return (
       <main className="page">
         <Welcome onCreate={() => setCreating(true)} name={name} />
-        {!name && <Link to="/perfil" className="card link row small" style={{ marginTop: 16 }}><span className="grow muted">Dinos tu nombre para personalizar el saludo.</span><ChevronRight className="chev" /></Link>}
-        <div className="notice small" style={{ marginTop: 12 }}>
-          Consejo: en iPhone, abre ATLAS en Safari y usa «Compartir › Añadir a pantalla de inicio» para instalarla y que tus datos se conserven de forma estable.
-        </div>
         {creating && <TripForm open onClose={() => setCreating(false)} onSaved={(id) => nav(`/viajes/${id}`)} />}
       </main>
     );
@@ -281,7 +277,10 @@ function Welcome({ onCreate, name }: { onCreate: () => void; name: string }) {
         <h2>Tu aventura empieza aquí</h2>
         <p>Planifica rutas, reparte gastos y lleva tus documentos contigo. Todo en tu iPhone, también sin conexión.</p>
         <button className="btn block start" onClick={onCreate}>Crear mi primer viaje</button>
-        <Link to="/perfil" className="restore"><Download size={14} style={{ verticalAlign: '-2px' }} /> Restaurar una copia de seguridad</Link>
+        <div className="welcome-links">
+          <Link to="/mundo" className="restore">Explorar el mundo</Link>
+          <Link to="/perfil" className="restore"><Download size={14} style={{ verticalAlign: '-2px' }} /> Restaurar copia</Link>
+        </div>
         <span className="credit">Cervino · Foto: chil (Camptocamp.org) · CC BY-SA 3.0 · Wikimedia Commons</span>
       </div>
     </section>
