@@ -1462,5 +1462,101 @@
   "source": "https://commons.wikimedia.org/wiki/File:To_Sua_Ocean_Trench,_Upolu,_Samoa_-_August_2016.jpg",
   "w": 900,
   "h": 675
+ },
+ "montecarlo": {
+  "file": "Panorama_von_Monaco-La_Turbie.jpg",
+  "author": "Tobi 87",
+  "license": "CC BY-SA 3.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Panorama_von_Monaco-La_Turbie.jpg",
+  "w": 900,
+  "h": 460
+ },
+ "canal": {
+  "file": "Vessels_locking_into_the_Panama_Canal.jpg",
+  "author": "Paul Harrison",
+  "license": "CC BY-SA 4.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Vessels_locking_into_the_Panama_Canal.jpg",
+  "w": 900,
+  "h": 600
+ },
+ "grenada": {
+  "file": "Grenada_-_St._George.jpg",
+  "author": "P. Hughes",
+  "license": "CC BY-SA 4.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Grenada_-_St._George.jpg",
+  "w": 900,
+  "h": 663
+ },
+ "paramaribo": {
+  "file": "Sint-Petrus-en-Pauluskathedraal.jpg",
+  "author": "Forrestjunky",
+  "license": "CC BY-SA 3.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Sint-Petrus-en-Pauluskathedraal.jpg",
+  "w": 900,
+  "h": 1200
+ },
+ "moroni": {
+  "file": "Moroni-Harbour.jpg",
+  "author": "Woodlouse",
+  "license": "CC BY-SA 2.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Moroni-Harbour.jpg",
+  "w": 900,
+  "h": 675
+ },
+ "malawi": {
+  "file": "Otter_Point,_Cape_Maclear_(Malawi).jpg",
+  "author": "Hans Hillewaert",
+  "license": "CC BY-SA 4.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Otter_Point,_Cape_Maclear_(Malawi).jpg",
+  "w": 900,
+  "h": 675
+ },
+ "bunce": {
+  "file": "Banana_Islands_(Sierra_Leone).jpg",
+  "author": "Christian Trede",
+  "license": "CC BY (atribución)",
+  "source": "https://commons.wikimedia.org/wiki/File:Banana_Islands_(Sierra_Leone).jpg",
+  "w": 900,
+  "h": 675
+ },
+ "maracas": {
+  "file": "Pigeon_Point_beach.jpg",
+  "author": "Kp93",
+  "license": "CC BY-SA 3.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Pigeon_Point_beach.jpg",
+  "w": 900,
+  "h": 505
+ },
+ "marovo": {
+  "file": "Honiara_View.jpg",
+  "author": "Kahunapule Michael Johnson",
+  "license": "CC BY-SA 2.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Honiara_View.jpg",
+  "w": 900,
+  "h": 600
+ },
+ "kindia": {
+  "file": "Mount_Nimba_Strict_Nature_Reserve-108445.jpg",
+  "author": "Guy Debonnet",
+  "license": "CC BY-SA 3.0 IGO",
+  "source": "https://commons.wikimedia.org/wiki/File:Mount_Nimba_Strict_Nature_Reserve-108445.jpg",
+  "w": 900,
+  "h": 1200
+ },
+ "bijagos": {
+  "file": "Forte_de_Cacheu_4.jpg",
+  "author": "Jcornelius",
+  "license": "CC BY-SA 4.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Forte_de_Cacheu_4.jpg",
+  "w": 900,
+  "h": 506
+ },
+ "boma": {
+  "file": "John_Garang_Mausoleum_Square_in_Juba.JPG",
+  "author": "Jens Klinzing",
+  "license": "CC BY-SA 3.0",
+  "source": "https://commons.wikimedia.org/wiki/File:John_Garang_Mausoleum_Square_in_Juba.JPG",
+  "w": 900,
+  "h": 675
  }
 }
