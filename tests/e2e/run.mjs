@@ -516,7 +516,7 @@ async function createTrip(page, { name, stages, start, end, companions = [], bud
     const F = await newDevice(browser, 'viaje');
     const pg = F.page;
     globalThis.__page = () => pg;
-    const iso = (d) => { const x = new Date(); x.setDate(x.getDate() + d); return x.toLocaleDateString('sv-SE'); };
+    const iso = (d) => new Date(Date.now() + d * 864e5).toLocaleDateString('sv-SE', { timeZone: 'Europe/Madrid' });
     await pg.goto(`${BASE}/perfil`);
     await pg.locator('#pf-city').fill('Madrid');
     await pg.locator('#pf-city').blur();
@@ -682,6 +682,56 @@ async function createTrip(page, { name, stages, start, end, companions = [], bud
     await pg.waitForFunction(ready, null, { timeout: 30000 });
     await pg.locator('.map').scrollIntoViewIfNeeded();
     await shot(pg, '26-mapa-sin-conexion');
+    await G.ctx.close();
+    globalThis.__page = () => A.page;
+  });
+
+  await step('Portada elegida de una galería, itinerario compartido y conversor de divisas', async () => {
+    const G = await newDevice(browser, 'extras');
+    const pg = G.page;
+    globalThis.__page = () => pg;
+    // Wikipedia simulada (la red de pruebas puede estar limitada por Wikimedia)
+    const IMG = readFileSync(join(root, 'public/world/belem.jpg'));
+    await G.ctx.route(/media-list/, (r) => r.fulfill({ json: { items: [{ title: 'Archivo:Lisboa_Alfama.jpg', type: 'image' }, { title: 'Archivo:Mapa_Lisboa.png', type: 'image' }] } }));
+    await G.ctx.route(/commons\.wikimedia\.org\/w\/api\.php/, (r) => r.fulfill({ json: { query: { pages: { 1: { title: 'File:Lisboa_Alfama.jpg', imageinfo: [{ thumburl: 'https://upload.wikimedia.org/x/1280px-Lisboa_Alfama.jpg', url: 'u', descriptionurl: 'https://commons.wikimedia.org/wiki/File:Lisboa_Alfama.jpg', width: 3000, height: 2000, extmetadata: { Artist: { value: '<a>Ana Pérez</a>' }, LicenseShortName: { value: 'CC BY-SA 4.0' } } }] } } } } }));
+    await G.ctx.route(/upload\.wikimedia\.org\/x\//, (r) => r.fulfill({ body: IMG, contentType: 'image/jpeg', headers: { 'access-control-allow-origin': '*' } }));
+    const d = (n) => new Date(Date.now() + n * 864e5).toISOString().slice(0, 10);
+    await pg.goto(`${BASE}/viajes`);
+    await pg.getByRole('button', { name: 'Crear viaje' }).first().click();
+    await pg.locator('#t-name').fill('Lisboa compartida');
+    await pg.getByLabel('Destino 1').fill('Lisboa');
+    await pg.locator('#t-start').fill(d(-1));
+    await pg.locator('#t-end').fill(d(3));
+    await pg.getByRole('button', { name: 'Confirmado' }).click();
+    await pg.getByRole('button', { name: 'Elegir foto' }).click();
+    await pg.getByRole('button', { name: /Usar esta foto \(Foto: Ana Pérez · CC BY-SA 4\.0/ }).click();
+    await pg.locator('.sheet .cover .credit', { hasText: 'Ana Pérez' }).waitFor();
+    await sheetSave(pg);
+    await pg.waitForURL(/\/viajes\/[^/]+$/);
+    const id = pg.url().split('/').pop();
+    // Itinerario compartido como página autónoma
+    await pg.goto(`${BASE}/viajes/${id}/itinerario`);
+    await pg.getByRole('button', { name: /Añadir/ }).first().click();
+    await pg.getByLabel('Título').fill('Torre de Belém');
+    await pg.locator('.sheet-head').getByRole('button', { name: /^(Guardar|Añadir)$/ }).click();
+    await pg.getByText('Torre de Belém').first().waitFor();
+    await pg.getByRole('button', { name: 'Compartir itinerario' }).click();
+    await pg.frameLocator('.share-preview iframe').getByText('Torre de Belém').waitFor({ timeout: 15000 });
+    await shot(pg, '27-compartir-itinerario');
+    const [dl] = await Promise.all([pg.waitForEvent('download'), pg.getByRole('button', { name: 'Compartir', exact: true }).click()]);
+    const file = join(out, dl.suggestedFilename());
+    await dl.saveAs(file);
+    const html = readFileSync(file, 'utf8');
+    assert.ok(html.includes('Lisboa compartida') && html.includes('Torre de Belém') && html.includes('data:image/jpeg'), 'el itinerario compartido no es autónomo');
+    await pg.getByRole('button', { name: 'Cancelar' }).click();
+    // Conversor de divisas en Inicio (viaje en curso)
+    await pg.goto(BASE);
+    await pg.getByRole('button', { name: 'Divisas' }).click();
+    await pg.getByLabel('Moneda de origen').selectOption('USD');
+    await pg.getByLabel('Moneda de destino').selectOption('EUR');
+    await pg.getByLabel('Cantidad en USD').fill('100');
+    await pg.waitForFunction(() => /\d/.test(document.querySelector('.fx-out')?.textContent ?? ''), null, { timeout: 15000 });
+    await shot(pg, '28-divisas');
     await G.ctx.close();
     globalThis.__page = () => A.page;
   });

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { MoreHorizontal, SearchX } from 'lucide-react';
+import { MoreHorizontal, SearchX, Share } from 'lucide-react';
+import { ShareItinerary } from './ShareItinerary';
 import { useParticipants, useTrip } from '../../data/queries';
 import { TopBar } from '../../app/TopBar';
 import { Cover } from '../../ui/Cover';
@@ -39,6 +40,7 @@ export function TripPage() {
   const profile = useProfile();
   const nav = useNavigate();
   const [editing, setEditing] = useState(false);
+  const [sharing, setSharing] = useState(false);
   const actions = useTripActions(() => setEditing(true));
   const ensured = useRef(false);
   // Completa coordenadas y país de los destinos (tiempo, mapa y pasaporte).
@@ -69,9 +71,14 @@ export function TripPage() {
   return (
     <>
       <TopBar title={trip.name} back="/viajes" right={
-        <button className="icon-btn" aria-label="Opciones del viaje" onClick={() => actions.open(trip, () => nav('/viajes', { replace: true }))}>
-          <MoreHorizontal />
-        </button>
+        <div className="row" style={{ gap: 2 }}>
+          <button className="icon-btn" aria-label="Compartir itinerario" onClick={() => setSharing(true)}>
+            <Share />
+          </button>
+          <button className="icon-btn" aria-label="Opciones del viaje" onClick={() => actions.open(trip, () => nav('/viajes', { replace: true }))}>
+            <MoreHorizontal />
+          </button>
+        </div>
       } />
       <main className="page" style={{ paddingTop: 4 }}>
         <div className="stack" style={{ gap: 14 }}>
@@ -104,6 +111,7 @@ export function TripPage() {
         </div>
       </main>
       {editing && <TripForm open trip={trip} onClose={() => setEditing(false)} />}
+      {sharing && <ShareItinerary trip={trip} onClose={() => setSharing(false)} />}
     </>
   );
 }
