@@ -9,6 +9,9 @@ import { startSync } from './sync/engine';
 import { getKV, DEFAULT_PROFILE, type Profile } from './data/settings';
 import { applyTheme } from './app/theme';
 import { setLanguage } from './i18n';
+import { lockZoom } from './app/scroller';
+
+lockZoom();
 
 async function boot() {
   try {

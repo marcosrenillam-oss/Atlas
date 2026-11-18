@@ -1,5 +1,6 @@
 import { useEffect, useState, useSyncExternalStore } from 'react';
 import { getSyncState, subscribeSync, type SyncState } from '../sync/engine';
+import { scroller } from './scroller';
 
 export function useSyncState(): SyncState {
   return useSyncExternalStore(subscribeSync, getSyncState, getSyncState);
@@ -23,10 +24,12 @@ export function useOnline(): boolean {
 export function useScrolled(threshold = 8): boolean {
   const [s, setS] = useState(false);
   useEffect(() => {
-    const f = () => setS(window.scrollY > threshold);
+    const el = scroller();
+    if (!el) return;
+    const f = () => setS(el.scrollTop > threshold);
     f();
-    window.addEventListener('scroll', f, { passive: true });
-    return () => window.removeEventListener('scroll', f);
+    el.addEventListener('scroll', f, { passive: true });
+    return () => el.removeEventListener('scroll', f);
   }, [threshold]);
   return s;
 }

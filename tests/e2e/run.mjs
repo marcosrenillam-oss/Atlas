@@ -113,6 +113,10 @@ async function createTrip(page, { name, stages, start, end, companions = [], bud
     const controlled = await page.evaluate(() => !!navigator.serviceWorker.controller);
     assert.ok(controlled, 'el SW no controla la página');
     const manifest = await page.evaluate(async () => (await fetch(document.querySelector('link[rel=manifest]').href)).json());
+    // Como una app nativa: sin zoom y sin que la página entera se desplace (lo hace el contenedor de la app)
+    const vp = await page.evaluate(() => document.querySelector('meta[name=viewport]').content);
+    assert.ok(/user-scalable=no/.test(vp) && /maximum-scale=1/.test(vp), 'el zoom no está bloqueado');
+    assert.equal(await page.evaluate(() => getComputedStyle(document.documentElement).overflow), 'hidden');
     assert.equal(manifest.display, 'standalone');
     await shot(page, '01-bienvenida');
   });

@@ -8,6 +8,7 @@ import { UIProvider, useUI } from '../ui/UIProvider';
 import { destinationPhoto } from '../ui/Cover';
 import { db } from '../data/db';
 import { runOfflinePack } from './offlinePack';
+import { scroller } from './scroller';
 import { HomePage } from '../features/home/HomePage';
 import { TripsPage } from '../features/trips/TripsPage';
 import { TripPage } from '../features/trip/TripPage';
@@ -21,7 +22,7 @@ const WorldPage = lazy(() => import('../features/world/WorldPage'));
 function ScrollToTop() {
   const { pathname } = useLocation();
   useEffect(() => {
-    window.scrollTo(0, 0);
+    scroller()?.scrollTo(0, 0);
   }, [pathname]);
   return null;
 }

@@ -89,11 +89,11 @@ export function TripsPage() {
           </div>
           <Segmented label="Grupo de viajes" value={group} onChange={setGroup} options={GROUPS.map((g) => ({ value: g.value, label: counts[g.value] ? `${g.label} ${counts[g.value]}` : g.label }))} />
           <div className="row" style={{ gap: 8 }}>
-            <select className="select" style={{ minHeight: 38, fontSize: 14, padding: '6px 34px 6px 12px' }} value={type} onChange={(e) => setType(e.target.value as TripType | 'all')} aria-label="Filtrar por tipo">
+            <select className="select" style={{ minHeight: 38, fontSize: 16, padding: '6px 34px 6px 12px' }} value={type} onChange={(e) => setType(e.target.value as TripType | 'all')} aria-label="Filtrar por tipo">
               <option value="all">Todos los tipos</option>
               {TRIP_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
             </select>
-            <select className="select" style={{ minHeight: 38, fontSize: 14, padding: '6px 34px 6px 12px' }} value={sort} onChange={(e) => setSort(e.target.value as Sort)} aria-label="Ordenar">
+            <select className="select" style={{ minHeight: 38, fontSize: 16, padding: '6px 34px 6px 12px' }} value={sort} onChange={(e) => setSort(e.target.value as Sort)} aria-label="Ordenar">
               <option value="fecha">Por fecha</option>
               <option value="nombre">Por nombre</option>
               <option value="recientes">Editados recientemente</option>

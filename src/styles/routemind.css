@@ -336,3 +336,45 @@ a.link, .link { color: var(--text); text-decoration: underline; text-decoration-
 .share-loading { height: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; color: var(--text-2); }
 .share-toggle { gap: 14px; margin-top: 14px; padding: 12px 14px; border-radius: 18px; background: var(--card); box-shadow: var(--glass-edge); }
 .share-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
+
+/* ─────────── Sensación de app nativa en el iPhone ─────────── */
+/* La página no se desplaza ni rebota: se desplaza el contenedor de la app, sin barra visible. */
+html, body { height: 100%; overflow: hidden; overscroll-behavior: none; }
+html { scroll-padding: 0; touch-action: manipulation; }
+#root { height: 100%; }
+.shell {
+  height: 100%; min-height: 0; overflow-y: auto; overflow-x: hidden; overscroll-behavior: none;
+  -webkit-overflow-scrolling: touch; scrollbar-width: none;
+  scroll-padding-bottom: calc(var(--tabbar-h) + var(--sab) + 40px);
+  scroll-padding-top: calc(var(--sat) + 110px);
+}
+.shell::-webkit-scrollbar, .sheet-body::-webkit-scrollbar, .hscroll::-webkit-scrollbar, .seg::-webkit-scrollbar,
+.tabs::-webkit-scrollbar, .lm-sheet::-webkit-scrollbar, .weather-strip::-webkit-scrollbar { display: none; width: 0; height: 0; }
+.sheet-body, .hscroll, .seg, .tabs, .lm-sheet, .weather-strip { scrollbar-width: none; }
+
+/* Sin zoom al escribir: iOS amplía cualquier campo con letra de menos de 16 px. */
+:where(input, select, textarea) { font-size: 16px; }
+.input, .select, .textarea { font-size: max(16px, 1em); }
+
+/* Como en una app: no se selecciona texto de la interfaz ni salen menús al mantener pulsado. */
+body { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+input, textarea, [contenteditable='true'], .selectable, .journal-text, .n, .note-text { -webkit-user-select: text; user-select: text; -webkit-touch-callout: default; }
+img, a { -webkit-touch-callout: none; -webkit-user-drag: none; }
+.days::-webkit-scrollbar { display: none; }
+.badge-card { min-width: 0; }
+.pill { min-width: 0; max-width: 100%; }
+
+/* Pantallas estrechas (iPhone SE de 4", zoom de pantalla) */
+@media (max-width: 359px) {
+  :root { --gutter: 14px; }
+  .badges { grid-template-columns: repeat(2, 1fr); }
+  .pill { white-space: normal; text-align: left; }
+  .page-head h1, .poster, .page-head h1[style] { font-size: 54px !important; }
+  .trip-title { font-size: 44px; }
+  .stats { grid-template-columns: 1fr; }
+}
+/* iPhone grandes (Plus / Pro Max): algo más de aire */
+@media (min-width: 420px) {
+  :root { --gutter: 20px; }
+  .trip-card.photo-card .cover { height: 260px; }
+}

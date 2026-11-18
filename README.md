@@ -177,6 +177,13 @@ Cómo funciona:
 - **Pasaporte**: mapa de tus viajes, países con bandera, ciudades, días, kilómetros, años y 12 logros.
 - **Mapas vectoriales a color** (MapLibre + OpenFreeMap «Liberty» recoloreado con colores suaves): claro/oscuro, nombres en español, pines por categoría, tu ubicación, recorrido del día en curva. Al acercarte a una ciudad aparecen bares, cafés, restaurantes, tiendas, museos, hoteles y transporte de OpenStreetMap; tócalos para ver qué son, cómo llegar o guardarlos como lugar (nombre, categoría y ubicación ya rellenos).
 
+## 6e. Sensación de app nativa en el iPhone
+
+- Sin zoom: ni pellizcando ni con doble toque, y el iPhone no amplía al escribir (todos los campos tienen al menos 16 px). Los mapas y el Mundo 3D sí se amplían con sus propios gestos.
+- Sin barra de desplazamiento ni rebote: la página no se mueve; se desplaza el contenido dentro de la app, como en una app nativa.
+- Sin menús de copiar al mantener pulsada la interfaz ni vistas previas de fotos o enlaces (el texto que escribes sí se puede seleccionar).
+- Se adapta a cada iPhone: del SE de 4" (320 px) al 16 Pro Max (440 px), con el notch o la Dynamic Island y la barra inferior respetados.
+
 ## 6d. Compartir, portadas y divisas
 
 - **Compartir itinerario** (icono de compartir en cada viaje): genera una página autónoma (foto, tipografía y estilos dentro del archivo) con portada, días, horas y direcciones enlazadas a Apple Maps. Se envía por WhatsApp, Mail o AirDrop y se abre en cualquier móvil u ordenador sin ATLAS; «Guardar PDF» abre la hoja de impresión del iPhone. Los localizadores de reserva y las notas solo se incluyen si activas el interruptor.
