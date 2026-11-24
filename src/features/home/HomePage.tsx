@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { ArrowLeftRight, ChevronRight, Compass, Download, ListTodo, Plane, UserRound, Map as MapIcon, Plus, Users, Wallet, WalletCards } from 'lucide-react';
+import { ArrowLeftRight, ChevronRight, Download, Plane, UserRound, Map as MapIcon, Plus, Users, Wallet, WalletCards } from 'lucide-react';
 import { useTrips, type TripWithStatus } from '../../data/queries';
 import { useProfile } from '../../data/settings';
 import { db } from '../../data/db';
@@ -16,7 +16,7 @@ import { CheckButton } from '../../ui/Controls';
 import { SyncBadge } from '../../app/SyncBadge';
 import { useNow } from '../../app/hooks';
 import { t } from '../../i18n';
-import { TripCard, TripRow, destinationsLabel } from '../trips/TripCard';
+import { TripCard, destinationsLabel } from '../trips/TripCard';
 import { TripForm } from '../trips/TripForm';
 import { ItineraryTab } from '../trip/ItineraryTab';
 import { QuickExpense } from '../trip/QuickExpense';
@@ -41,7 +41,6 @@ export function HomePage() {
   const ongoing = sorted.filter((x) => x.status === 'en-curso');
   const upcoming = sorted.filter((x) => x.status === 'proximo');
   const preparing = sorted.filter((x) => x.status === 'en-preparacion');
-  const recent = sorted.filter((x) => x.status === 'completado').reverse().slice(0, 4);
   const featured = ongoing[0] ?? upcoming[0] ?? preparing.find((p) => p.startDate && p.startDate >= today());
   const activeIds = new Set([...ongoing, ...upcoming, ...preparing].map((x) => x.id));
 
@@ -62,6 +61,7 @@ export function HomePage() {
     return byCur;
   }, []);
 
+  const others = [...upcoming, ...preparing].filter((x, i, arr) => x.id !== featured?.id && arr.findIndex((y) => y.id === x.id) === i);
   const name = profile.name.trim().split(' ')[0];
   const isEmpty = trips && trips.length === 0;
   const mainCur = profile.currency;
@@ -91,79 +91,49 @@ export function HomePage() {
           {name ? <>, <span className="serif grad-text">{name}</span></> : null}
         </h1>
       </div>
-      <div style={{ marginTop: -6, marginBottom: 20 }}><SyncBadge /></div>
+      <div className="home-sync"><SyncBadge quiet /></div>
 
-      {isEmpty ? (
-        null
-      ) : (
-        <>
-          {featured ? <FeaturedTrip trip={featured} now={now} /> : (
-            <button className="card link row" style={{ width: '100%', border: 0, textAlign: 'left' }} onClick={() => setCreating(true)}>
-              <div className="icon-tile lg" data-tone="pink"><Plus /></div>
-              <div className="grow"><div style={{ fontWeight: 650 }}>Planifica tu próximo viaje</div><div className="small muted">No tienes viajes próximos.</div></div>
-              <ChevronRight className="chev" />
-            </button>
-          )}
-
-          {upcoming.filter((x) => x.id !== featured?.id).length > 0 && (
-            <section className="section">
-              <div className="section-head"><h2>Próximos viajes</h2><Link className="link" to="/viajes">Ver todos</Link></div>
-              <div className="hscroll">
-                {upcoming.filter((x) => x.id !== featured?.id).map((x) => <TripCard key={x.id} trip={x} />)}
-              </div>
-            </section>
-          )}
-
-          {preparing.filter((x) => x.id !== featured?.id).length > 0 && (
-            <section className="section">
-              <div className="section-head"><h2>En preparación</h2></div>
-              <div className="list">{preparing.filter((x) => x.id !== featured?.id).slice(0, 5).map((x) => <TripRow key={x.id} trip={x} />)}</div>
-            </section>
-          )}
-
-          <section className="section">
-            <div className="section-head"><h2>Tareas pendientes</h2>{openTasks.length > 0 && <span className="small faint">{openTasks.length}</span>}</div>
-            {openTasks.length === 0 ? (
-              <div className="card flat row small muted"><ListTodo size={18} /> Nada pendiente. Añade tareas desde el resumen de cada viaje.</div>
-            ) : (
-              <div className="list">
-                {openTasks.slice(0, 6).map((tk) => <HomeTask key={tk.id} task={tk} tripName={trips?.find((x) => x.id === tk.tripId)?.name ?? ''} />)}
-              </div>
-            )}
-          </section>
-
-          <section className="section">
-            <div className="section-head"><h2>Gastos</h2><Link className="link" to="/gastos">Detalle</Link></div>
-            <div className="stats">
-              <div className="stat">
-                <div className="lbl">Este año</div>
-                <div className="val"><CountUp value={mainMoney?.year ?? 0} format={(n) => formatMoney(Math.round(n), mainCur)} /></div>
-                <div className="sub">en viajes en {mainCur}</div>
-              </div>
-              <div className="stat">
-                <div className="lbl">Pendiente de pago</div>
-                <div className="val"><CountUp value={mainMoney?.pending ?? 0} format={(n) => formatMoney(Math.round(n), mainCur)} /></div>
-                <div className="sub">{[...(money?.keys() ?? [])].filter((c) => c !== mainCur).length ? 'otras monedas en Gastos' : 'entre todos los viajes'}</div>
-              </div>
-            </div>
-          </section>
-
-          <section className="section">
-            <div className="section-head"><h2>Accesos rápidos</h2></div>
-            <div className="grid-2">
-              <button className="card link row" style={{ border: 0, textAlign: 'left' }} onClick={() => setCreating(true)}><div className="icon-tile" data-tone="coral"><Plus /></div><span style={{ fontWeight: 650 }}>Crear viaje</span></button>
-              <Link className="card link row" to="/explorar"><div className="icon-tile" data-tone="violet"><Compass /></div><span style={{ fontWeight: 650 }}>Mis lugares</span></Link>
-            </div>
-          </section>
-
-          {recent.length > 0 && (
-            <section className="section">
-              <div className="section-head"><h2>Viajes recientes</h2><Link className="link" to="/viajes">Historial</Link></div>
-              <div className="list">{recent.map((x) => <TripRow key={x.id} trip={x} />)}</div>
-            </section>
-          )}
-        </>
+      {featured ? <FeaturedTrip trip={featured} now={now} /> : (
+        <button className="card link row" style={{ width: '100%', border: 0, textAlign: 'left' }} onClick={() => setCreating(true)}>
+          <div className="icon-tile lg" data-tone="pink"><Plus /></div>
+          <div className="grow"><div style={{ fontWeight: 650 }}>Planifica tu próximo viaje</div><div className="small muted">Solo necesitas el destino.</div></div>
+          <ChevronRight className="chev" />
+        </button>
       )}
+
+      {others.length > 0 && (
+        <section className="section">
+          <div className="section-head"><h2>Tus viajes</h2><Link className="link" to="/viajes">Ver todos</Link></div>
+          <div className="hscroll">
+            {others.map((x) => <TripCard key={x.id} trip={x} />)}
+          </div>
+        </section>
+      )}
+
+      {openTasks.length > 0 && (
+        <section className="section">
+          <div className="section-head"><h2>Tareas pendientes</h2><span className="small faint">{openTasks.length}</span></div>
+          <div className="list">
+            {openTasks.slice(0, 5).map((tk) => <HomeTask key={tk.id} task={tk} tripName={trips?.find((x) => x.id === tk.tripId)?.name ?? ''} />)}
+          </div>
+        </section>
+      )}
+
+      {(mainMoney?.year || mainMoney?.pending) ? (
+        <section className="section">
+          <Link to="/gastos" className="card link money-strip" aria-label="Ver gastos">
+            <div>
+              <div className="lbl">Gastado este año</div>
+              <div className="val"><CountUp value={mainMoney?.year ?? 0} format={(n) => formatMoney(Math.round(n), mainCur)} /></div>
+            </div>
+            <div>
+              <div className="lbl">Pendiente de pago</div>
+              <div className="val"><CountUp value={mainMoney?.pending ?? 0} format={(n) => formatMoney(Math.round(n), mainCur)} /></div>
+            </div>
+            <ChevronRight className="chev" />
+          </Link>
+        </section>
+      ) : null}
       {creating && <TripForm open onClose={() => setCreating(false)} onSaved={(id) => nav(`/viajes/${id}`)} />}
     </main>
   );

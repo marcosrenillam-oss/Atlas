@@ -32,6 +32,13 @@ const TABS = [
   { id: 'equipaje', label: t('trip.tab.packing') },
 ] as const;
 export type TripTab = (typeof TABS)[number]['id'];
+/** Cuatro secciones; Plan y Maleta agrupan dos vistas cada una. */
+const GROUPS: { id: string; label: string; ids: TripTab[] }[] = [
+  { id: 'resumen', label: 'Resumen', ids: ['resumen'] },
+  { id: 'plan', label: 'Plan', ids: ['itinerario', 'mapa'] },
+  { id: 'gastos', label: 'Gastos', ids: ['gastos'] },
+  { id: 'maleta', label: 'Maleta', ids: ['equipaje', 'documentos'] },
+];
 
 export function TripPage() {
   const { tripId, tab = 'resumen' } = useParams();
@@ -94,13 +101,29 @@ export function TripPage() {
             </p>
           </div>
         </div>
-        <nav className="tabs" aria-label="Secciones del viaje" style={{ marginTop: 14, position: 'sticky', top: 'calc(var(--sat) + 52px)', background: 'var(--bg)', zIndex: 10 }}>
-          {TABS.map((x) => (
-            <Link key={x.id} to={`/viajes/${trip.id}/${x.id}`} replace className={x.id === active ? 'active' : ''} aria-current={x.id === active ? 'page' : undefined}>
-              {x.label}
-            </Link>
-          ))}
+        <nav className="tabs tabs-4" aria-label="Secciones del viaje" style={{ marginTop: 14, position: 'sticky', top: 'calc(var(--sat) + 52px)', background: 'var(--bg)', zIndex: 10 }}>
+          {GROUPS.map((g) => {
+            const on = g.ids.includes(active);
+            return (
+              <Link key={g.id} to={`/viajes/${trip.id}/${on ? active : g.ids[0]}`} replace className={on ? 'active' : ''} aria-current={on ? 'page' : undefined}>
+                {g.label}
+              </Link>
+            );
+          })}
         </nav>
+        {(() => {
+          const g = GROUPS.find((x) => x.ids.includes(active));
+          if (!g || g.ids.length < 2) return null;
+          return (
+            <nav className="subtabs" aria-label={`Vista de ${g.label}`}>
+              {g.ids.map((id) => (
+                <Link key={id} to={`/viajes/${trip.id}/${id}`} replace className={id === active ? 'on' : ''} aria-current={id === active ? 'page' : undefined}>
+                  {TABS.find((x) => x.id === id)!.label}
+                </Link>
+              ))}
+            </nav>
+          );
+        })()}
         <div style={{ marginTop: 18 }}>
           {active === 'resumen' && <SummaryTab trip={trip} />}
           {active === 'itinerario' && <ItineraryTab trip={trip} />}

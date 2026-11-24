@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { ImagePlus, Images, Loader2, MapPin, Plus, Trash2, X } from 'lucide-react';
+import { ChevronDown, ImagePlus, Images, SlidersHorizontal, Loader2, MapPin, Plus, Trash2, X } from 'lucide-react';
 import { CoverPicker } from './CoverPicker';
 import { Sheet } from '../../ui/Sheet';
 import { Field, Segmented, Stepper } from '../../ui/Controls';
@@ -66,6 +66,7 @@ export function TripForm({ open, onClose, trip, onSaved, initialDestination }: {
   const [companion, setCompanion] = useState('');
   const [busy, setBusy] = useState<string | null>(null);
   const [picking, setPicking] = useState(false);
+  const [more, setMore] = useState(!!trip);
   const fileInput = useRef<HTMLInputElement>(null);
   const createdCover = useRef<string | null>(null);
   const editing = !!trip;
@@ -75,6 +76,8 @@ export function TripForm({ open, onClose, trip, onSaved, initialDestination }: {
     if (!trip && !originTouched.current && profile.homeCity) setD((x) => (x.origin ? x : { ...x, origin: profile.homeCity! }));
   }, [trip, profile.homeCity]);
 
+  const firstDest = d.stages.find((x) => x.name.trim())?.name.trim() ?? '';
+  const autoName = firstDest ? `Viaje a ${firstDest}` : '';
   const set = <K extends keyof Draft>(k: K, v: Draft[K]) => setD((x) => ({ ...x, [k]: v }));
   const setStage = (i: number, patch: Partial<Stage>) => setD((x) => ({ ...x, stages: x.stages.map((s, j) => (j === i ? { ...s, ...patch } : s)) }));
 
@@ -87,7 +90,7 @@ export function TripForm({ open, onClose, trip, onSaved, initialDestination }: {
 
   function validate(): boolean {
     const e: Record<string, string> = {};
-    if (!d.name.trim()) e.name = 'Ponle un nombre al viaje.';
+    if (!d.name.trim() && !autoName) e.name = 'Escribe a dónde vas o ponle un nombre al viaje.';
     if (d.startDate && !isISODate(d.startDate)) e.startDate = 'Fecha no válida.';
     if (d.endDate && !isISODate(d.endDate)) e.endDate = 'Fecha no válida.';
     if (d.startDate && d.endDate && d.endDate < d.startDate) e.endDate = 'El regreso no puede ser anterior a la salida.';
@@ -108,7 +111,7 @@ export function TripForm({ open, onClose, trip, onSaved, initialDestination }: {
       const stages = d.stages.filter((s) => s.name.trim()).map((s) => ({ ...s, name: s.name.trim() }));
       const companions = [...d.companions, companion.trim()].filter(Boolean);
       const data = {
-        name: d.name.trim(),
+        name: d.name.trim() || autoName,
         origin: d.origin.trim() || undefined,
         stages,
         startDate: d.startDate || undefined,
@@ -172,21 +175,13 @@ export function TripForm({ open, onClose, trip, onSaved, initialDestination }: {
   return (
     <Sheet open={open} onClose={close} title={editing ? 'Editar viaje' : 'Nuevo viaje'} full action={{ label: busy === 'save' ? 'Guardando…' : 'Guardar', onClick: () => void submit(), disabled: !!busy, form: 'trip-form' }}>
       <form id="trip-form" className="form" onSubmit={submit} noValidate>
-        <Field label="Nombre del viaje" htmlFor="t-name" error={errors.name}>
-          <input id="t-name" className="input" value={d.name} onChange={(e) => set('name', e.target.value)} placeholder="Escapada a Lisboa" aria-invalid={!!errors.name || undefined} autoComplete="off" enterKeyHint="next" />
-        </Field>
-
-        <Field label="Salgo desde" htmlFor="t-origin" hint="Aparece en el billete de la portada.">
-          <input id="t-origin" className="input" value={d.origin} onChange={(e) => { originTouched.current = true; set('origin', e.target.value); }} placeholder="Madrid" autoComplete="address-level2" enterKeyHint="next" />
-        </Field>
-
         <div className="field">
-          <span className="label">Destinos y etapas</span>
+          <span className="label">¿A dónde vas?</span>
           <div className="stack-sm">
             {d.stages.map((s, i) => (
               <div key={s.id} className="card flat tight stack-sm">
                 <div className="input-group">
-                  <input className="input" value={s.name} onChange={(e) => setStage(i, { name: e.target.value, point: undefined })} placeholder={i === 0 ? 'Destino principal' : `Etapa ${i + 1}`} aria-label={`Destino ${i + 1}`} />
+                  <input className="input" value={s.name} onChange={(e) => setStage(i, { name: e.target.value, point: undefined })} placeholder={i === 0 ? 'Lisboa, Japón, Nueva York…' : `Etapa ${i + 1}`} aria-label={`Destino ${i + 1}`} />
                   <button type="button" className="icon-btn sm muted" aria-label="Ubicar destino en el mapa" disabled={!online || !s.name.trim() || !!busy} onClick={() => void locateStage(i)} title={online ? 'Ubicar en el mapa' : 'Necesita conexión'}>
                     {busy === `loc${i}` ? <Loader2 className="spin" /> : <MapPin style={{ color: s.point ? 'var(--success)' : undefined }} />}
                   </button>
@@ -212,134 +207,156 @@ export function TripForm({ open, onClose, trip, onSaved, initialDestination }: {
         </div>
 
         <div className="grid-2">
-          <Field label="Salida" htmlFor="t-start" error={errors.startDate}>
+          <Field label="Ida" htmlFor="t-start" error={errors.startDate}>
             <input id="t-start" type="date" className="input" value={d.startDate} onChange={(e) => set('startDate', e.target.value)} aria-invalid={!!errors.startDate || undefined} />
           </Field>
-          <Field label="Regreso" htmlFor="t-end" error={errors.endDate}>
+          <Field label="Vuelta" htmlFor="t-end" error={errors.endDate}>
             <input id="t-end" type="date" className="input" value={d.endDate} min={d.startDate || undefined} onChange={(e) => set('endDate', e.target.value)} aria-invalid={!!errors.endDate || undefined} />
           </Field>
         </div>
 
-        <Field label="Estado">
-          <Segmented label="Estado del viaje" value={d.planning} onChange={(v) => set('planning', v)} options={[{ value: 'planning', label: 'En preparación' }, { value: 'confirmed', label: 'Confirmado' }]} />
+        <Field label="Nombre" htmlFor="t-name" error={errors.name} hint={d.name.trim() ? undefined : autoName ? `Si lo dejas vacío: «${autoName}»` : undefined}>
+          <input id="t-name" className="input" value={d.name} onChange={(e) => set('name', e.target.value)} placeholder={autoName || 'Escapada a Lisboa'} aria-invalid={!!errors.name || undefined} autoComplete="off" enterKeyHint="next" />
         </Field>
 
-        <div className="row-between">
-          <div>
-            <div className="label">Número de viajeros</div>
-            <div className="hint tiny faint">Incluyéndote a ti</div>
-          </div>
-          <Stepper label="Número de viajeros" value={d.travelers} onChange={(v) => set('travelers', v)} />
-        </div>
+        <Field label="Salgo desde" htmlFor="t-origin" hint="Aparece en el billete de la portada.">
+          <input id="t-origin" className="input" value={d.origin} onChange={(e) => { originTouched.current = true; set('origin', e.target.value); }} placeholder="Madrid" autoComplete="address-level2" enterKeyHint="next" />
+        </Field>
 
-        {!editing && (
-          <Field label="Acompañantes" hint="Opcional. Se usan para repartir gastos. Puedes añadirlos después.">
-            <div className="stack-sm">
-              {d.companions.length > 0 && (
-                <div className="row wrap" style={{ gap: 6 }}>
-                  {d.companions.map((c, i) => (
-                    <span key={c + i} className="chip">
-                      {c}
-                      <button type="button" aria-label={`Quitar ${c}`} style={{ border: 0, background: 'none', padding: 0, display: 'grid', color: 'inherit' }} onClick={() => set('companions', d.companions.filter((_, j) => j !== i))}>
-                        <X size={14} />
-                      </button>
-                    </span>
-                  ))}
-                </div>
-              )}
-              <div className="input-group">
-                <input className="input" value={companion} onChange={(e) => setCompanion(e.target.value)} placeholder="Nombre" aria-label="Nombre del acompañante"
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      if (companion.trim()) {
-                        const next = [...d.companions, companion.trim()];
-                        setD((x) => ({ ...x, companions: next, travelers: Math.max(x.travelers, next.length + 1) }));
-                        setCompanion('');
-                      }
-                    }
-                  }}
-                />
-                <button type="button" className="btn secondary" disabled={!companion.trim()} onClick={() => {
-                  const next = [...d.companions, companion.trim()];
-                  setD((x) => ({ ...x, companions: next, travelers: Math.max(x.travelers, next.length + 1) }));
-                  setCompanion('');
-                }}>Añadir</button>
-              </div>
-            </div>
-          </Field>
+        {!more && (
+          <button type="button" className="more-toggle" onClick={() => setMore(true)}>
+            <SlidersHorizontal size={18} aria-hidden="true" />
+            <span className="grow">
+              <span className="mt-title">Más opciones</span>
+              <span className="mt-sub">Estado, viajeros, acompañantes, presupuesto, portada…</span>
+            </span>
+            <ChevronDown size={18} aria-hidden="true" />
+          </button>
         )}
-
-        <Field label="Tipo de viaje" htmlFor="t-type">
-          <select id="t-type" className="select" value={d.type} onChange={(e) => set('type', e.target.value as TripType)}>
-            {TRIP_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
-          </select>
-        </Field>
-
-        <div className="grid-2">
-          <Field label="Presupuesto" htmlFor="t-budget" error={errors.budget}>
-            <MoneyInput id="t-budget" value={d.budget} currency={d.currency} invalid={!!errors.budget} onChange={(v, valid) => setD((x) => ({ ...x, budget: v, budgetValid: valid }))} />
+        {more && (
+          <>
+          <Field label="Estado">
+            <Segmented label="Estado del viaje" value={d.planning} onChange={(v) => set('planning', v)} options={[{ value: 'planning', label: 'En preparación' }, { value: 'confirmed', label: 'Confirmado' }]} />
           </Field>
-          <Field label="Moneda" htmlFor="t-cur">
-            <select id="t-cur" className="select" value={d.currency} onChange={(e) => set('currency', e.target.value)}>
-              {CURRENCIES.map((c) => <option key={c}>{c}</option>)}
+
+          <div className="row-between">
+            <div>
+              <div className="label">Número de viajeros</div>
+              <div className="hint tiny faint">Incluyéndote a ti</div>
+            </div>
+            <Stepper label="Número de viajeros" value={d.travelers} onChange={(v) => set('travelers', v)} />
+          </div>
+
+          {!editing && (
+            <Field label="Acompañantes" hint="Opcional. Se usan para repartir gastos. Puedes añadirlos después.">
+              <div className="stack-sm">
+                {d.companions.length > 0 && (
+                  <div className="row wrap" style={{ gap: 6 }}>
+                    {d.companions.map((c, i) => (
+                      <span key={c + i} className="chip">
+                        {c}
+                        <button type="button" aria-label={`Quitar ${c}`} style={{ border: 0, background: 'none', padding: 0, display: 'grid', color: 'inherit' }} onClick={() => set('companions', d.companions.filter((_, j) => j !== i))}>
+                          <X size={14} />
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+                <div className="input-group">
+                  <input className="input" value={companion} onChange={(e) => setCompanion(e.target.value)} placeholder="Nombre" aria-label="Nombre del acompañante"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        if (companion.trim()) {
+                          const next = [...d.companions, companion.trim()];
+                          setD((x) => ({ ...x, companions: next, travelers: Math.max(x.travelers, next.length + 1) }));
+                          setCompanion('');
+                        }
+                      }
+                    }}
+                  />
+                  <button type="button" className="btn secondary" disabled={!companion.trim()} onClick={() => {
+                    const next = [...d.companions, companion.trim()];
+                    setD((x) => ({ ...x, companions: next, travelers: Math.max(x.travelers, next.length + 1) }));
+                    setCompanion('');
+                  }}>Añadir</button>
+                </div>
+              </div>
+            </Field>
+          )}
+
+          <Field label="Tipo de viaje" htmlFor="t-type">
+            <select id="t-type" className="select" value={d.type} onChange={(e) => set('type', e.target.value as TripType)}>
+              {TRIP_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
             </select>
           </Field>
-        </div>
 
-        <Field label="Descripción" htmlFor="t-desc">
-          <textarea id="t-desc" className="textarea" value={d.description} onChange={(e) => set('description', e.target.value)} placeholder="Notas generales, objetivo del viaje…" />
-        </Field>
+          <div className="grid-2">
+            <Field label="Presupuesto" htmlFor="t-budget" error={errors.budget}>
+              <MoneyInput id="t-budget" value={d.budget} currency={d.currency} invalid={!!errors.budget} onChange={(v, valid) => setD((x) => ({ ...x, budget: v, budgetValid: valid }))} />
+            </Field>
+            <Field label="Moneda" htmlFor="t-cur">
+              <select id="t-cur" className="select" value={d.currency} onChange={(e) => set('currency', e.target.value)}>
+                {CURRENCIES.map((c) => <option key={c}>{c}</option>)}
+              </select>
+            </Field>
+          </div>
 
-        <div className="field">
-          <span className="label">Fotografía de portada</span>
-          {d.cover ? (
-            <div style={{ position: 'relative' }}>
-              <Cover trip={{ name: d.name, stages: d.stages, cover: d.cover }} style={{ aspectRatio: '16/8', borderRadius: 14 }} showCredit />
-              <button type="button" className="icon-btn sm filled" style={{ position: 'absolute', top: 8, right: 8 }} aria-label="Quitar portada" onClick={() => {
-                if (createdCover.current) void remove('files', createdCover.current);
-                createdCover.current = null;
-                set('cover', undefined);
-              }}>
-                <X />
+          <Field label="Descripción" htmlFor="t-desc">
+            <textarea id="t-desc" className="textarea" value={d.description} onChange={(e) => set('description', e.target.value)} placeholder="Notas generales, objetivo del viaje…" />
+          </Field>
+
+          <div className="field">
+            <span className="label">Fotografía de portada</span>
+            {d.cover ? (
+              <div style={{ position: 'relative' }}>
+                <Cover trip={{ name: d.name, stages: d.stages, cover: d.cover }} style={{ aspectRatio: '16/8', borderRadius: 14 }} showCredit />
+                <button type="button" className="icon-btn sm filled" style={{ position: 'absolute', top: 8, right: 8 }} aria-label="Quitar portada" onClick={() => {
+                  if (createdCover.current) void remove('files', createdCover.current);
+                  createdCover.current = null;
+                  set('cover', undefined);
+                }}>
+                  <X />
+                </button>
+              </div>
+            ) : null}
+            <div className="row wrap" style={{ gap: 8 }}>
+              <button type="button" className="btn secondary sm" onClick={() => fileInput.current?.click()} disabled={!!busy}>
+                <ImagePlus /> Subir foto
+              </button>
+              <button type="button" className="btn secondary sm" onClick={() => setPicking(true)} disabled={!!busy}>
+                <Images /> Elegir foto
               </button>
             </div>
-          ) : null}
-          <div className="row wrap" style={{ gap: 8 }}>
-            <button type="button" className="btn secondary sm" onClick={() => fileInput.current?.click()} disabled={!!busy}>
-              <ImagePlus /> Subir foto
-            </button>
-            <button type="button" className="btn secondary sm" onClick={() => setPicking(true)} disabled={!!busy}>
-              <Images /> Elegir foto
-            </button>
+            {!d.cover && (
+              <Cover trip={{ name: d.name, stages: d.stages, origin: d.origin, startDate: d.startDate || undefined, travelers: d.travelers }} style={{ aspectRatio: '16/9', borderRadius: 18 }} />
+            )}
+            <span className="hint">{d.cover ? '' : 'Sin elegir, la portada es la foto del país con tu billete de origen y destino. '}La foto se guarda en el dispositivo y se ve sin conexión.</span>
+            {picking && (
+              <CoverPicker
+                open
+                trip={{ name: d.name, stages: d.stages }}
+                onClose={() => setPicking(false)}
+                onPick={async (c) => {
+                  try {
+                    const r = await fetch(c.full);
+                    if (!r.ok) throw new Error();
+                    await setCoverBlob(await r.blob(), `${d.stages[0]?.name || d.name || 'portada'}.jpg`, c.credit, c.page);
+                  } catch {
+                    ui.toast('No se pudo descargar esa foto. Prueba con otra.', { kind: 'error' });
+                    throw new Error('descarga');
+                  }
+                }}
+              />
+            )}
+            <input ref={fileInput} type="file" accept="image/*" hidden onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f) void setCoverBlob(f, f.name);
+              e.target.value = '';
+            }} />
           </div>
-          {!d.cover && (
-            <Cover trip={{ name: d.name, stages: d.stages, origin: d.origin, startDate: d.startDate || undefined, travelers: d.travelers }} style={{ aspectRatio: '16/9', borderRadius: 18 }} />
-          )}
-          <span className="hint">{d.cover ? '' : 'Sin elegir, la portada es la foto del país con tu billete de origen y destino. '}La foto se guarda en el dispositivo y se ve sin conexión.</span>
-          {picking && (
-            <CoverPicker
-              open
-              trip={{ name: d.name, stages: d.stages }}
-              onClose={() => setPicking(false)}
-              onPick={async (c) => {
-                try {
-                  const r = await fetch(c.full);
-                  if (!r.ok) throw new Error();
-                  await setCoverBlob(await r.blob(), `${d.stages[0]?.name || d.name || 'portada'}.jpg`, c.credit, c.page);
-                } catch {
-                  ui.toast('No se pudo descargar esa foto. Prueba con otra.', { kind: 'error' });
-                  throw new Error('descarga');
-                }
-              }}
-            />
-          )}
-          <input ref={fileInput} type="file" accept="image/*" hidden onChange={(e) => {
-            const f = e.target.files?.[0];
-            if (f) void setCoverBlob(f, f.name);
-            e.target.value = '';
-          }} />
-        </div>
+          </>
+        )}
       </form>
     </Sheet>
   );

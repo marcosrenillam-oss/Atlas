@@ -60,7 +60,13 @@ async function newDevice(browser, name, extra = {}) {
   return { ctx, page };
 }
 
-const tab = (page, name) => page.locator('nav.tabs').getByRole('link', { name, exact: true }).click();
+// Secciones del viaje: Resumen · Plan (Itinerario | Mapa) · Gastos · Maleta (Equipaje | Documentos)
+const GROUP = { Itinerario: 'Plan', Mapa: 'Plan', Equipaje: 'Maleta', Documentos: 'Maleta' };
+const tab = async (page, name) => {
+  const g = GROUP[name];
+  await page.locator('nav.tabs').getByRole('link', { name: g ?? name, exact: true }).click();
+  if (g) await page.locator('nav.subtabs').getByRole('link', { name, exact: true }).click();
+};
 const shot = async (page, name) => { await page.waitForTimeout(400); return page.screenshot({ path: join(out, `${name}.png`), fullPage: false }); };
 const sheetSave = (page) => page.locator('.sheet-head').getByRole('button', { name: /^(Guardar|Crear)$/ }).click();
 
@@ -82,6 +88,8 @@ async function createTrip(page, { name, stages, start, end, companions = [], bud
   }
   if (start) await page.locator('#t-start').fill(start);
   if (end) await page.locator('#t-end').fill(end);
+  // Las opciones avanzadas están plegadas: el viaje se puede crear solo con destino y fechas.
+  if (confirmed || companions.length || budget) await page.locator('.more-toggle').click();
   if (confirmed) await page.getByRole('button', { name: 'Confirmado' }).click();
   for (const c of companions) {
     await page.getByLabel('Nombre del acompañante').fill(c);
@@ -321,7 +329,7 @@ async function createTrip(page, { name, stages, start, end, companions = [], bud
     await page.getByRole('link', { name: 'Próximo viaje: Escapada a Lisboa' }).waitFor();
     await page.getByText('días para salir').waitFor();
     await page.getByText('Reservar parking aeropuerto').waitFor();
-    await page.getByText('En preparación').first().waitFor();
+    await page.getByRole('heading', { name: 'Tus viajes' }).waitFor();
     await shot(page, '11-inicio');
     await page.screenshot({ path: join(out, '11b-inicio-completo.png'), fullPage: true });
   });
@@ -399,8 +407,8 @@ async function createTrip(page, { name, stages, start, end, companions = [], bud
 
   await step('Vuelta a la conexión: estado vuelve a Conectado', async () => {
     await ctx.setOffline(false);
-    await p().goto(BASE);
-    await p().getByText(/Conectado · Solo en este dispositivo/).waitFor();
+    await p().goto(`${BASE}/perfil`);
+    await p().getByText(/Conectado · Solo en este dispositivo/).first().waitFor();
   });
 
   let backupPath;
@@ -706,6 +714,7 @@ async function createTrip(page, { name, stages, start, end, companions = [], bud
     await pg.getByLabel('Destino 1').fill('Lisboa');
     await pg.locator('#t-start').fill(d(-1));
     await pg.locator('#t-end').fill(d(3));
+    await pg.locator('.more-toggle').click();
     await pg.getByRole('button', { name: 'Confirmado' }).click();
     await pg.getByRole('button', { name: 'Elegir foto' }).click();
     await pg.getByRole('button', { name: /Usar esta foto \(Foto: Ana Pérez · CC BY-SA 4\.0/ }).click();

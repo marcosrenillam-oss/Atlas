@@ -2,8 +2,10 @@ import { t } from '../i18n';
 import { useSyncState } from './hooks';
 
 /** Estado honesto de conexión y sincronización. */
-export function SyncBadge() {
+export function SyncBadge({ quiet }: { quiet?: boolean } = {}) {
   const s = useSyncState();
+  // En Inicio solo se muestra si usas la sincronización (lo demás es ruido).
+  if (quiet && s.phase === 'disabled' && !s.pending) return null;
   let dot = 'status-dot';
   let text: string;
   if (!s.online) {

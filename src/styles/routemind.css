@@ -378,3 +378,23 @@ img, a { -webkit-touch-callout: none; -webkit-user-drag: none; }
   :root { --gutter: 20px; }
   .trip-card.photo-card .cover { height: 260px; }
 }
+
+/* Formulario rápido: opciones avanzadas plegadas */
+.more-toggle { display: flex; align-items: center; gap: 12px; width: 100%; padding: 14px 16px; border: 0; border-radius: 18px; background: var(--card); box-shadow: var(--glass-edge); color: var(--text); text-align: left; font: inherit; cursor: pointer; }
+.more-toggle .mt-title { display: block; font-weight: 700; }
+.more-toggle .mt-sub { display: block; font-size: 13px; color: var(--text-2); }
+
+/* Secciones del viaje: 4 pestañas que ocupan el ancho + selector de vista */
+.tabs.tabs-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; overflow: visible; }
+.tabs.tabs-4 a { justify-content: center; text-align: center; padding: 8px 4px; }
+.subtabs { display: inline-flex; gap: 2px; margin-top: 12px; padding: 3px; border-radius: 999px; background: var(--bg-elev); }
+.subtabs a { padding: 7px 16px; border-radius: 999px; font-size: 14px; font-weight: 650; color: var(--text-2); text-decoration: none; }
+.subtabs a.on { background: var(--card); color: var(--text); box-shadow: 0 4px 12px -6px rgba(0, 0, 0, 0.3); }
+
+/* Inicio limpio */
+.home-sync:empty { display: none; }
+.home-sync { margin: -6px 0 18px; }
+.page-head + .home-sync:empty + * { margin-top: 6px; }
+.money-strip { display: grid; grid-template-columns: 1fr 1fr auto; align-items: center; gap: 12px; padding: 16px 18px; }
+.money-strip .lbl { font-size: 13px; color: var(--text-2); }
+.money-strip .val { font-size: 22px; font-weight: 750; letter-spacing: -0.02em; }
