@@ -17,6 +17,7 @@ export interface WorldApi {
   recenter(): void;
   setTheme(dark: boolean): void;
   setLabels(els: Map<string, HTMLElement>): void;
+  setVisited(v: Set<string>): void;
 }
 
 const HEX_R = 1;
@@ -192,6 +193,23 @@ export function createWorld(container: HTMLElement, opts: { dark: boolean; onSel
     desert: ['#ecd197', '#e4c584', '#f0d9a6'],
     snow: ['#eef4f6', '#e4edf0'],
   };
+  // Países visitados: su territorio se pinta en rosa salmón.
+  const VISIT: Record<string, string[]> = {
+    grass: ['#f2a08b', '#ee937c', '#f4ad9a', '#ec8b73'],
+    sand: ['#f6bfae', '#f3b4a1'],
+    plaza: ['#f3b3a2', '#f0a894'],
+    desert: ['#f1a487', '#ed9a7c'],
+    snow: ['#f6c7ba', '#f3bcad'],
+  };
+
+  const tileArr = [...tiles.values()];
+  function paintTiles(visited: Set<string>) {
+    tileArr.forEach((t, i) => {
+      const p = visited.has(t.lm.countryCode) ? VISIT[t.kind] : PAL[t.kind];
+      tileMesh.setColorAt(i, col.set(p[Math.floor(hash(t.q * 3, t.r * 7) * p.length)]));
+    });
+    if (tileMesh.instanceColor) tileMesh.instanceColor.needsUpdate = true;
+  }
   let ti = 0;
   for (const t of tiles.values()) {
     const h = t.top + 1.6;
@@ -200,10 +218,9 @@ export function createWorld(container: HTMLElement, opts: { dark: boolean; onSel
     dummy.rotation.set(0, 0, 0);
     dummy.updateMatrix();
     tileMesh.setMatrixAt(ti, dummy.matrix);
-    const p = PAL[t.kind];
-    tileMesh.setColorAt(ti, col.set(p[Math.floor(hash(t.q * 3, t.r * 7) * p.length)]));
     ti++;
   }
+  paintTiles(opts.visited);
   scene.add(tileMesh);
 
   // ── Mini-ciudades (casitas) y árboles ──
@@ -508,7 +525,7 @@ export function createWorld(container: HTMLElement, opts: { dark: boolean; onSel
     }
     items.sort((a, b) => a.d - b.d);
     // Zonas ocupadas por la barra superior y la de pestañas: ahí no se ponen etiquetas.
-    const placed: [number, number, number, number][] = [[0, -999, w, 72], [0, h - 104, w, h + 999]];
+    const placed: [number, number, number, number][] = [[0, -999, w, 72], [0, -999, 196, 150], [0, h - 104, w, h + 999]];
     for (const it of items) {
       const small = compact && it.id !== selectedId;
       const lw = (small ? 34 : 46 + (nameLen.get(it.id) ?? 10) * 7.3) * scale, lh = 30 * scale;
@@ -676,6 +693,11 @@ export function createWorld(container: HTMLElement, opts: { dark: boolean; onSel
     setLabels(els) {
       labels = els;
       for (const [id, el] of els) el.classList.toggle('visited', opts.visited.has(LANDMARKS.find((l) => l.id === id)?.countryCode ?? ''));
+    },
+    setVisited(v) {
+      opts.visited = v;
+      paintTiles(v);
+      for (const [id, el] of labels) el.classList.toggle('visited', v.has(LANDMARKS.find((l) => l.id === id)?.countryCode ?? ''));
     },
     dispose() {
       running = false;

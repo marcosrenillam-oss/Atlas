@@ -54,8 +54,9 @@ export default function WorldPage() {
   }, []);
 
   useEffect(() => {
-    api.current?.setLabels(labelRefs.current);
+    api.current?.setVisited(visited);
   }, [visited]);
+  const seen = [...visited].filter((c) => LANDMARKS.some((l) => l.countryCode === c)).length;
 
   const landmark = LANDMARKS.find((l) => l.id === selected) ?? null;
 
@@ -99,6 +100,12 @@ export default function WorldPage() {
         <button className="icon-btn filled" aria-label="Volver a la vista general" onClick={() => api.current?.recenter()}><LocateFixed /></button>
       </div>
 
+      {seen > 0 && !landmark && (
+        <div className="world-progress" role="status">
+          <div className="wp-num"><b>{seen}</b> de {LANDMARKS.length} países</div>
+          <div className="wp-bar"><i style={{ width: `${Math.max(2, (seen / LANDMARKS.length) * 100)}%` }} /></div>
+        </div>
+      )}
       {hint && !failed && (
         <div className="world-hint" role="status"><Hand size={16} /> Arrastra para moverte · pellizca para acercar · toca un monumento o busca un país arriba</div>
       )}

@@ -12,7 +12,8 @@ import { CountUp } from '../../ui/Motion';
 import { Empty } from '../../ui/Empty';
 import { enrichTrip } from '../../services/geo';
 import { routeKm } from '../trip/Recap';
-import { ACHIEVEMENTS, flag, type PassportData } from './achievements';
+import { ACHIEVEMENTS, type PassportData } from './achievements';
+import { Stamp } from './Stamp';
 
 export function PassportPage() {
   const trips = useTrips();
@@ -40,7 +41,7 @@ export function PassportPage() {
   const data = useMemo(() => {
     if (!trips || !extra) return null;
     const lived = trips.filter((t) => t.status === 'completado' || t.status === 'en-curso' || (t.status === 'archivado' && t.endDate && t.endDate < new Date().toISOString().slice(0, 10)));
-    const countries = new Map<string, { name: string; trips: number }>();
+    const countries = new Map<string, { name: string; trips: number; year?: string }>();
     const cities = new Set<string>();
     let days = 0, km = 0;
     const years = new Map<string, { trips: number; days: number }>();
@@ -50,6 +51,8 @@ export function PassportPage() {
         if (s.countryCode) {
           const c = countries.get(s.countryCode) ?? { name: s.country ?? s.countryCode, trips: 0 };
           c.trips++;
+          const y = t.startDate?.slice(0, 4);
+          if (y && (!c.year || y < c.year)) c.year = y;
           countries.set(s.countryCode, c);
         }
       }
@@ -104,16 +107,16 @@ export function PassportPage() {
           )}
         </section>
 
-        {data.countries.length > 0 && (
-          <section className="section">
-            <div className="section-head"><h2>Países</h2></div>
-            <div className="chips" style={{ flexWrap: 'wrap', margin: 0, padding: 0 }}>
-              {data.countries.map(([code, c]) => (
-                <span key={code} className="chip"><span style={{ fontSize: 18 }}>{flag(code)}</span> {c.name}{c.trips > 1 ? <span className="count">×{c.trips}</span> : null}</span>
-              ))}
-            </div>
-          </section>
-        )}
+        <section className="section">
+          <div className="section-head"><h2>Sellos</h2><span className="small faint">{data.countries.length} de 195 países</span></div>
+          <div className="stamps">
+            {data.countries.map(([code, c]) => <Stamp key={code} code={code} name={c.name} year={c.year} trips={c.trips} />)}
+            {data.countries.length < 3 && Array.from({ length: 3 - data.countries.length }, (_, i) => (
+              <div key={`e${i}`} className="stamp empty" aria-hidden="true"><span>{i === 0 && !data.countries.length ? 'Tu primer sello te espera' : 'Próximo sello'}</span></div>
+            ))}
+          </div>
+          <Link to="/mundo" className="link small" style={{ display: 'inline-block', marginTop: 10 }}>Ver tus países en el Mundo ATLAS</Link>
+        </section>
 
         <section className="section">
           <div className="section-head"><h2>Logros</h2><span className="small faint">{unlocked} de {ACHIEVEMENTS.length}</span></div>

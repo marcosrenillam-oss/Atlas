@@ -398,3 +398,22 @@ img, a { -webkit-touch-callout: none; -webkit-user-drag: none; }
 .money-strip { display: grid; grid-template-columns: 1fr 1fr auto; align-items: center; gap: 12px; padding: 16px 18px; }
 .money-strip .lbl { font-size: 13px; color: var(--text-2); }
 .money-strip .val { font-size: 22px; font-weight: 750; letter-spacing: -0.02em; }
+
+/* Mundo: tu progreso */
+.world-progress { position: absolute; z-index: 3; left: 12px; top: calc(var(--sat) + 74px); width: 168px; padding: 9px 12px 10px; border-radius: 16px; background: color-mix(in srgb, var(--card-solid) 82%, transparent); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); box-shadow: var(--shadow-1), var(--glass-edge); pointer-events: none; }
+.wp-num { font-size: 13px; color: var(--text-2); }
+.wp-num b { font-family: var(--font-poster); font-weight: 400; font-size: 30px; line-height: 1; color: var(--text); margin-right: 4px; }
+.wp-bar { height: 6px; border-radius: 3px; background: var(--bg-elev); margin-top: 6px; overflow: hidden; }
+.wp-bar i { display: block; height: 100%; border-radius: 3px; background: var(--accent-2); }
+.world-label.visited { background: #f3b9ad; color: #4a1f17; }
+
+/* Sellos del pasaporte */
+.stamps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px 10px; padding: 14px 12px; border-radius: 24px;
+  background: repeating-linear-gradient(0deg, transparent 0 27px, rgba(17, 17, 19, 0.04) 27px 28px), #fbf7ef; box-shadow: var(--shadow-1), inset 0 0 0 1px rgba(17, 17, 19, 0.05); }
+:root[data-theme='dark'] .stamps { background: repeating-linear-gradient(0deg, transparent 0 27px, rgba(255, 255, 255, 0.04) 27px 28px), #24211c; }
+.stamp { position: relative; margin: 0; aspect-ratio: 1; animation: stamp-in 0.5s var(--spring) both; }
+.stamp svg { width: 100%; height: 100%; display: block; }
+.stamp-flag { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -54%); font-size: 26px; filter: saturate(0.85); }
+.stamp.empty { display: grid; place-items: center; border: 2px dashed var(--line-strong); border-radius: 50%; color: var(--text-3); font-size: 11px; text-align: center; padding: 14px; animation: none; }
+.stamp:nth-child(2) { animation-delay: 0.08s; } .stamp:nth-child(3) { animation-delay: 0.16s; } .stamp:nth-child(4) { animation-delay: 0.24s; }
+@keyframes stamp-in { from { opacity: 0; transform: scale(1.4) rotate(-20deg); } }
