@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { Share } from 'lucide-react';
 import { db } from '../../data/db';
@@ -9,7 +9,8 @@ import { formatMoney } from '../../lib/money';
 import { formatRange } from '../../lib/dates';
 import { distanceKm } from '../../maps/external';
 import { Sheet } from '../../ui/Sheet';
-import { Cover, paletteFor } from '../../ui/Cover';
+import { Cover, destinationPhoto } from '../../ui/Cover';
+import { flag } from '../passport/achievements';
 import { CountUp } from '../../ui/Motion';
 import { useUI } from '../../ui/UIProvider';
 import { useFileUrl } from '../../files/files';
@@ -73,6 +74,21 @@ export function RecapSheet({ trip, onClose }: { trip: Trip; onClose: () => void 
   const ui = useUI();
   const [busy, setBusy] = useState(false);
   const heroUrl = useFileUrl(trip.cover ? undefined : s?.heroPhotoId);
+  const [story, setStory] = useState<{ blob: Blob; url: string } | null>(null);
+  useEffect(() => {
+    if (!s) return;
+    let url = '';
+    let alive = true;
+    void renderRecapImage(trip, s).then((blob) => {
+      if (!alive) return;
+      url = URL.createObjectURL(blob);
+      setStory({ blob, url });
+    });
+    return () => {
+      alive = false;
+      if (url) URL.revokeObjectURL(url);
+    };
+  }, [trip, s]);
   if (!s) return null;
   const stats: { n: number; label: string; fmt?: (n: number) => string }[] = [
     { n: s.days, label: s.days === 1 ? 'día' : 'días' },
@@ -86,7 +102,7 @@ export function RecapSheet({ trip, onClose }: { trip: Trip; onClose: () => void 
   async function share() {
     setBusy(true);
     try {
-      const blob = await renderRecapImage(trip, s!);
+      const blob = story?.blob ?? (await renderRecapImage(trip, s!));
       const file = new File([blob], `${trip.name.replace(/[^\p{L}\p{N}]+/gu, '-')}-resumen.png`, { type: 'image/png' });
       if (navigator.canShare?.({ files: [file] })) await navigator.share({ files: [file], title: trip.name });
       else {
@@ -107,8 +123,8 @@ export function RecapSheet({ trip, onClose }: { trip: Trip; onClose: () => void 
   return (
     <Sheet open full title="Resumen del viaje" onClose={onClose} closeLabel="Cerrar">
       <div className="recap stagger">
-        <div className="recap-hero">
-          {heroUrl ? <img src={heroUrl} alt="" /> : <Cover trip={trip} />}
+        <div className="story-preview">
+          {story ? <img src={story.url} alt={`Historia de ${trip.name} para compartir`} /> : heroUrl ? <img src={heroUrl} alt="" /> : <Cover trip={trip} />}
         </div>
         <div>
           <h2 className="recap-title">{trip.name}</h2>
@@ -143,76 +159,133 @@ function loadImage(blob: Blob): Promise<HTMLImageElement> {
   });
 }
 
-/** Dibuja la tarjeta de Stories en un canvas (sin servicios externos). */
+/** Foto para la historia: la tuya (portada o diario) o la del país del destino. */
+async function storyPhoto(trip: Trip, s: RecapStats): Promise<HTMLImageElement | null> {
+  try {
+    if (s.heroPhotoId) {
+      const f = await db.files.get(s.heroPhotoId);
+      if (f) return await loadImage(f.blob);
+    }
+    const id = destinationPhoto(trip);
+    if (id) {
+      const r = await fetch(`${import.meta.env.BASE_URL}world/${id}.jpg`);
+      if (r.ok) return await loadImage(await r.blob());
+    }
+  } catch {
+    /* sin foto: fondo liso */
+  }
+  return null;
+}
+
+/** Dibuja la historia (1080×1920, formato Stories) en el propio móvil, con el estilo de ATLAS. */
 async function renderRecapImage(trip: Trip, s: RecapStats): Promise<Blob> {
   const W = 1080, H = 1920;
   const c = document.createElement('canvas');
   c.width = W;
   c.height = H;
   const g = c.getContext('2d')!;
-  const [a, b, d] = paletteFor(trip.stages[0]?.name || trip.name);
-  const bg = g.createLinearGradient(0, 0, W, H);
-  bg.addColorStop(0, a);
-  bg.addColorStop(0.55, b);
-  bg.addColorStop(1, d);
-  g.fillStyle = bg;
-  g.fillRect(0, 0, W, H);
-  // Foto principal
-  let y = 120;
-  if (s.heroPhotoId) {
-    const f = await db.files.get(s.heroPhotoId);
-    if (f) {
-      try {
-        const img = await loadImage(f.blob);
-        const bw = W - 160, bh = 820;
-        const r = Math.max(bw / img.width, bh / img.height);
-        const sw = bw / r, sh = bh / r;
-        g.save();
-        roundRect(g, 80, y, bw, bh, 56);
-        g.clip();
-        g.drawImage(img, (img.width - sw) / 2, (img.height - sh) / 2, sw, sh, 80, y, bw, bh);
-        g.restore();
-        y += bh + 70;
-      } catch {
-        /* imagen no decodificable */
-      }
-    }
-  }
-  if (y === 120) y = 360;
+  await document.fonts?.load('200px "Six Caps"').catch(() => undefined);
   const sans = '-apple-system, BlinkMacSystemFont, "SF Pro Display", system-ui, sans-serif';
+  const poster = '"Six Caps", Impact, sans-serif-condensed, sans-serif';
+  // Fondo: foto a sangre
+  g.fillStyle = '#16171a';
+  g.fillRect(0, 0, W, H);
+  const img = await storyPhoto(trip, s);
+  if (img) {
+    const r = Math.max(W / img.width, H / img.height);
+    const sw = W / r, sh = H / r;
+    g.drawImage(img, (img.width - sw) / 2, (img.height - sh) / 2, sw, sh, 0, 0, W, H);
+  }
+  const shade = g.createLinearGradient(0, 0, 0, H);
+  shade.addColorStop(0, 'rgba(0,0,0,0.35)');
+  shade.addColorStop(0.28, 'rgba(0,0,0,0)');
+  shade.addColorStop(0.5, 'rgba(0,0,0,0.25)');
+  shade.addColorStop(0.72, 'rgba(0,0,0,0.82)');
+  shade.addColorStop(1, 'rgba(0,0,0,0.94)');
+  g.fillStyle = shade;
+  g.fillRect(0, 0, W, H);
+  // Cabecera: marca y fechas
   g.fillStyle = '#fff';
-  g.font = `800 92px ${sans}`;
-  y = wrapText(g, trip.name, 80, y + 80, W - 160, 100);
+  g.font = `400 84px ${poster}`;
+  g.fillText('ATLAS', 72, 150);
+  g.font = `600 36px ${sans}`;
+  g.textAlign = 'right';
   g.globalAlpha = 0.9;
-  g.font = `500 44px ${sans}`;
-  g.fillText(formatRange(trip.startDate, trip.endDate), 80, y + 30);
+  g.fillText(formatRange(trip.startDate, trip.endDate), W - 72, 140);
   g.globalAlpha = 1;
-  y += 110;
-  const cells = [
-    [String(s.days), s.days === 1 ? 'día' : 'días'],
-    [String(s.destinations), s.destinations === 1 ? 'destino' : 'destinos'],
-    [s.km.toLocaleString('es-ES'), 'km'],
-    [formatMoney(s.spent, trip.currency, { compact: true }), 'gastado'],
+  g.textAlign = 'left';
+  // Etiqueta rosa
+  let y = 1010;
+  g.font = `700 36px ${sans}`;
+  const tag = 'Mi viaje';
+  const tw = g.measureText(tag).width + 56;
+  g.fillStyle = '#f3b9ad';
+  roundRect(g, 72, y - 50, tw, 68, 34);
+  g.fill();
+  g.fillStyle = '#4a1f17';
+  g.fillText(tag, 100, y - 4);
+  // Título en letra de cartel
+  y += 40;
+  g.fillStyle = '#fff';
+  const title = trip.name.toUpperCase();
+  let fs = 260;
+  g.font = `400 ${fs}px ${poster}`;
+  while (fs > 150 && title.split(' ').some((w) => g.measureText(w).width > W - 144)) g.font = `400 ${(fs -= 10)}px ${poster}`;
+  y = wrapText(g, title, 72, y + fs * 0.82, W - 144, fs * 0.92) + 20;
+  // Ruta y banderas
+  const route = [trip.origin, ...trip.stages.map((x) => x.name)].filter((x): x is string => !!x && !!x.trim());
+  g.font = `600 42px ${sans}`;
+  g.globalAlpha = 0.92;
+  if (route.length) y = wrapText(g, route.join('  →  '), 72, y + 64, W - 144, 54);
+  g.globalAlpha = 1;
+  const flags = [...new Set(trip.stages.map((x) => x.countryCode).filter(Boolean))].map((cc) => flag(cc)).join(' ');
+  if (flags) {
+    g.font = `64px ${sans}`;
+    g.fillText(flags, 72, y + 96);
+    y += 96;
+  }
+  // Cifras
+  y += 70;
+  const cand: [number, string, string][] = [
+    [s.days, String(s.days), s.days === 1 ? 'día' : 'días'],
+    [s.km, s.km.toLocaleString('es-ES'), 'km'],
+    [s.countries > 1 ? s.countries : 0, String(s.countries), 'países'],
+    [s.destinations > 1 ? s.destinations : 0, String(s.destinations), 'destinos'],
+    [s.done, String(s.done), s.done === 1 ? 'plan hecho' : 'planes hechos'],
+    [s.spent, formatMoney(s.spent, trip.currency, { compact: true }), 'gastado'],
+    [s.photos, String(s.photos), s.photos === 1 ? 'foto' : 'fotos'],
+    [s.journal, String(s.journal), s.journal === 1 ? 'día en el diario' : 'días en el diario'],
   ];
-  const cw = (W - 160 - 30) / 2;
+  const cells = cand.filter(([n]) => n > 0).slice(0, 4).map(([, v, l]) => [v, l]);
+  if (!cells.length) cells.push(['1', 'viaje']);
+  const cw = (W - 144 - 24 * (cells.length - 1)) / cells.length;
   cells.forEach(([v, l], i) => {
-    const x = 80 + (i % 2) * (cw + 30);
-    const yy = y + Math.floor(i / 2) * 200;
-    g.fillStyle = 'rgba(255,255,255,0.2)';
-    roundRect(g, x, yy, cw, 170, 40);
+    const x = 72 + i * (cw + 24);
+    g.fillStyle = 'rgba(255,255,255,0.14)';
+    roundRect(g, x, y, cw, 190, 36);
     g.fill();
     g.fillStyle = '#fff';
-    g.font = `800 72px ${sans}`;
-    g.fillText(v, x + 36, yy + 92);
-    g.font = `600 36px ${sans}`;
-    g.globalAlpha = 0.85;
-    g.fillText(l, x + 36, yy + 140);
+    let vs = 86;
+    g.font = `400 ${vs}px ${poster}`;
+    while (g.measureText(v).width > cw - 30 && vs > 40) g.font = `400 ${(vs -= 6)}px ${poster}`;
+    g.fillText(v, x + 24, y + 104);
+    g.font = `600 28px ${sans}`;
+    g.globalAlpha = 0.82;
+    g.fillText(l, x + 24, y + 152);
     g.globalAlpha = 1;
   });
-  g.font = `800 40px ${sans}`;
-  g.fillStyle = '#fff';
-  g.globalAlpha = 0.9;
-  g.fillText('ATLAS ✦', 80, H - 90);
+  y += 190;
+  // Frase del diario
+  if (s.quote && y < H - 260) {
+    g.font = `italic 500 40px ${sans}`;
+    g.globalAlpha = 0.9;
+    y = wrapText(g, `«${s.quote}»`, 72, y + 100, W - 144, 52);
+    g.globalAlpha = 1;
+  }
+  // Pie
+  g.font = `600 30px ${sans}`;
+  g.globalAlpha = 0.7;
+  g.fillText('Planificado con ATLAS · gratis y sin conexión', 72, H - 80);
   g.globalAlpha = 1;
   return new Promise((res, rej) => c.toBlob((bl) => (bl ? res(bl) : rej(new Error('canvas'))), 'image/png'));
 }
