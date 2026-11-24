@@ -23,6 +23,7 @@ import { ITEM_TONE } from '../../ui/tones';
 import { WalletSheet, useWalletDocs } from './Wallet';
 import { RecapSheet } from './Recap';
 import { TripWeather } from './TripWeather';
+import { Sights } from './Sights';
 import { Sparkles, WalletCards } from 'lucide-react';
 
 const ROLE_LABEL: Record<Role, string> = { owner: 'Organizador', editor: 'Puede editar', viewer: 'Solo lectura' };
@@ -91,6 +92,8 @@ export function SummaryTab({ trip }: { trip: TripWithStatus }) {
       </div>
 
       <TripWeather trip={trip} />
+
+      <Sights trip={trip} />
 
       {/* Próxima actividad */}
       {nextItem && (

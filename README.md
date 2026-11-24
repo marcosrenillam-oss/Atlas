@@ -177,6 +177,16 @@ Cómo funciona:
 - **Pasaporte**: mapa de tus viajes, países con bandera, ciudades, días, kilómetros, años y 12 logros.
 - **Mapas vectoriales a color** (MapLibre + OpenFreeMap «Liberty» recoloreado con colores suaves): claro/oscuro, nombres en español, pines por categoría, tu ubicación, recorrido del día en curva. Al acercarte a una ciudad aparecen bares, cafés, restaurantes, tiendas, museos, hoteles y transporte de OpenStreetMap; tócalos para ver qué son, cómo llegar o guardarlos como lugar (nombre, categoría y ubicación ya rellenos).
 
+## 6f. Más sencilla y más visual
+
+- **Crear un viaje en 10 segundos**: basta con el destino (el nombre se pone solo, «Viaje a Lisboa»); fechas opcionales y el resto en «Más opciones».
+- **Cuatro secciones por viaje**: Resumen · Plan (Itinerario | Mapa) · Gastos · Maleta (Equipaje | Documentos).
+- **Inicio limpio**: tu próximo viaje, «Tus viajes» con foto, tareas solo si hay y una línea de gastos.
+- **Qué ver en cada destino**: lugares de interés de Wikivoyage (CC BY-SA; en ciudades grandes, de sus barrios). Un toque y pasan a las Ideas del itinerario con su ubicación; la lista queda guardada para usarla sin conexión.
+- **Tu mundo coloreado**: en el Mundo ATLAS, el territorio de los países visitados se pinta en rosa y ves tu progreso («N de 195 países»).
+- **Sellos en el Pasaporte**: un sello dibujado por país, con año de entrada y número de visitas.
+- **Historia del viaje**: imagen 1080×1920 con foto a sangre, título, ruta, banderas y cifras, lista para Instagram o WhatsApp.
+
 ## 6e. Sensación de app nativa en el iPhone
 
 - Sin zoom: ni pellizcando ni con doble toque, y el iPhone no amplía al escribir (todos los campos tienen al menos 16 px). Los mapas y el Mundo 3D sí se amplían con sus propios gestos.

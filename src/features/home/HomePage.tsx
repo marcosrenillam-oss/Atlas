@@ -246,7 +246,10 @@ function Welcome({ onCreate, name }: { onCreate: () => void; name: string }) {
       <div className="welcome-body">
         <h1 className="kicker">{name ? `Hola, ${name}` : 'Bienvenido a ATLAS'}</h1>
         <h2>Tu aventura empieza aquí</h2>
-        <p>Planifica rutas, reparte gastos y lleva tus documentos contigo. Todo en tu iPhone, también sin conexión.</p>
+        <p>Planifica rutas, reparte gastos y lleva tus documentos contigo.</p>
+        <ul className="welcome-perks" aria-label="Por qué ATLAS">
+          {['Gratis', 'Sin anuncios', 'Sin cuenta', 'Funciona sin conexión', 'Tus datos, solo en tu iPhone'].map((x) => <li key={x}>{x}</li>)}
+        </ul>
         <button className="btn block start" onClick={onCreate}>Crear mi primer viaje</button>
         <div className="welcome-links">
           <Link to="/mundo" className="restore">Explorar el mundo</Link>

@@ -749,6 +749,35 @@ async function createTrip(page, { name, stages, start, end, companions = [], bud
     globalThis.__page = () => A.page;
   });
 
+  await step('Qué ver en el destino (Wikivoyage) y añadirlo a Ideas, también sin conexión', async () => {
+    const G = await newDevice(browser, 'que-ver');
+    const pg = G.page;
+    globalThis.__page = () => pg;
+    const ROMA = readFileSync(join(root, 'tests/e2e/fixtures/wikivoyage-roma.txt'), 'utf8');
+    await G.ctx.route(/wikivoyage\.org\/w\/api\.php/, (r) => {
+      const u = new URL(r.request().url());
+      const page = u.hostname.startsWith('es') && u.searchParams.get('titles') === 'Roma' ? { title: 'Roma', revisions: [{ slots: { main: { content: ROMA } } }] } : { title: 'x', missing: true };
+      return r.fulfill({ json: { query: { pages: [page], search: [] } }, headers: { 'access-control-allow-origin': '*' } });
+    });
+    await pg.goto(`${BASE}/viajes`);
+    await pg.getByRole('button', { name: 'Crear viaje' }).first().click();
+    await pg.getByLabel('Destino 1').fill('Roma');
+    await sheetSave(pg);
+    await pg.waitForURL(/\/viajes\/[^/]+$/);
+    await pg.getByRole('heading', { name: 'Viaje a Roma' }).waitFor(); // nombre automático
+    await pg.getByRole('heading', { name: 'Qué ver en Roma' }).waitFor();
+    await pg.getByRole('button', { name: 'Añadir Panteón a Ideas' }).click();
+    await pg.getByRole('button', { name: 'Panteón ya está en tu plan' }).waitFor();
+    await G.ctx.setOffline(true);
+    await pg.reload();
+    await pg.getByText('Foro Romano').waitFor(); // guardado para usarlo sin conexión
+    await tab(pg, 'Itinerario');
+    await pg.getByRole('button', { name: /Ideas sin fecha/ }).click();
+    await pg.getByText('Panteón').first().waitFor();
+    await G.ctx.close();
+    globalThis.__page = () => A.page;
+  });
+
   await step('Sin errores de consola', async () => {
     assert.deepEqual(consoleErrors, []);
   });

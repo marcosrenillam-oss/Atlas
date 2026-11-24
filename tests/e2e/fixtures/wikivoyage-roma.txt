@@ -1,0 +1,6 @@
+== Ver ==
+* {{ver|nombre=Coliseo|lat=41.89059|long=12.49241|descripción=Centro de espectáculo de la Roma antigua.}}
+* {{ver|nombre=Foro Romano|lat=41.8922|long=12.4853|descripción=Ruinas del centro de la ciudad antigua.}}
+* {{ver|nombre=Panteón|lat=41.8986|long=12.4769|descripción=Templo romano con la cúpula de hormigón sin armar más grande del mundo.}}
+== Hacer ==
+* {{hacer|nombre=Paseo por el Trastévere|descripción=Barrio de calles estrechas.}}
